@@ -117,9 +117,6 @@ namespace Classless.Verifier {
 
 		// User wants to calculate the hashes/checksums for the input given.
 		private void btnCalculate_Click(object sender, System.EventArgs e) {
-			int padding = 0;
-			DateTime start = new DateTime(DateTime.Now.Ticks);
-
 			// Validate input.
 			if (listAlgorithms.SelectedItems.Count <= 0) {
 				MessageBox.Show("You must select at least one algorithm to calculate with.",
@@ -138,18 +135,24 @@ namespace Classless.Verifier {
 			Cursor.Current = Cursors.WaitCursor;
 
 			// Build the calculator.
+			int padding = 0;
 			HashCalculator c = new HashCalculator();
 			foreach(object a in listAlgorithms.SelectedItems) {
 				if (a.ToString().Length > padding) { padding = a.ToString().Length; }
 				c.AddAlgorithm(Algorithm.GetTypeFromName(a.ToString()));
 			}
 
+			long numBytes = 0;
+			DateTime start = new DateTime(DateTime.Now.Ticks);
+
 			// Calculate the hashes/checksums.
 			if (optInputText.Checked) {
+				numBytes = txtInputText.Text.Length;
 				c.ComputeHash(txtInputText.Text);
 			} else {
 				try {
 					FileStream fs = File.OpenRead(txtInputFile.Text);
+					numBytes = fs.Length;
 					c.ComputeHash(fs);
 				} catch (FileNotFoundException) {
 					MessageBox.Show("Could not find file.",
@@ -165,14 +168,17 @@ namespace Classless.Verifier {
 					return;
 				}
 			}
+			TimeSpan duration = DateTime.Now - start;
 
 			// Display results.
 			txtOutput.Clear();
 			foreach(object a in listAlgorithms.SelectedItems) {
 				txtOutput.Text += a.ToString().PadRight(padding, ' ') + ": " + Classless.Hasher.Utilities.ByteToHexadecimal(c.GetHash(Algorithm.GetTypeFromName(a.ToString()))) + Environment.NewLine;
 			}
-			TimeSpan duration = DateTime.Now - start;
-			txtOutput.Text += Environment.NewLine + "Calculations completed in: " + duration.ToString();
+			txtOutput.Text += Environment.NewLine + "Bytes Processed : " + numBytes.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
+			txtOutput.Text += Environment.NewLine + "Processing Time : " + duration.ToString();
+			Classless.Utilities.ByteMeasurements bm = new Classless.Utilities.ByteMeasurements(numBytes);
+			txtOutput.Text += Environment.NewLine + "Processing Speed: " + bm.Rate(duration.TotalSeconds, Classless.Utilities.MeasurementSystem.Binary, true, 2);
 
 			// Open the GUI back up.
 			btnCalculate.Text = "&Calculate";
@@ -196,7 +202,11 @@ namespace Classless.Verifier {
 
 		// User wants to copy the selected text to the clipboard.
 		private void mnuOutputCopy_Click(object sender, System.EventArgs e) {
-			Clipboard.SetDataObject(txtOutput.SelectedText, true);
+			if (txtOutput.SelectedText.Length == 0) {
+				Clipboard.SetDataObject(txtOutput.Text, true);
+			} else {
+				Clipboard.SetDataObject(txtOutput.SelectedText, true);
+			}
 		}
 
 		// User wants to save the output of the calculations.
@@ -212,11 +222,10 @@ namespace Classless.Verifier {
 					// Write header.
 					writer.WriteLine(Verifier.GetFullTitle());
 					writer.WriteLine("Hash Calculator Report");
-					writer.Write("Input: ");
 					if (optInputText.Checked) {
-						writer.WriteLine(txtInputText.Text);
+						writer.WriteLine("Input: " + txtInputText.Text);
 					} else {
-						writer.WriteLine(txtInputFile.Text);
+						writer.WriteLine("File: " + txtInputFile.Text);
 					}
 					writer.WriteLine();
 
@@ -282,6 +291,7 @@ namespace Classless.Verifier {
 			this.btnBrowse.Enabled = false;
 			this.btnBrowse.Location = new System.Drawing.Point(456, 48);
 			this.btnBrowse.Name = "btnBrowse";
+			this.btnBrowse.Size = new System.Drawing.Size(76, 20);
 			this.btnBrowse.TabIndex = 9;
 			this.btnBrowse.Text = "&Browse";
 			// 
@@ -306,7 +316,7 @@ namespace Classless.Verifier {
 			// 
 			this.optInputFile.Location = new System.Drawing.Point(8, 48);
 			this.optInputFile.Name = "optInputFile";
-			this.optInputFile.Size = new System.Drawing.Size(48, 24);
+			this.optInputFile.Size = new System.Drawing.Size(48, 20);
 			this.optInputFile.TabIndex = 6;
 			this.optInputFile.Text = "F&ile:";
 			// 
@@ -315,7 +325,7 @@ namespace Classless.Verifier {
 			this.optInputText.Checked = true;
 			this.optInputText.Location = new System.Drawing.Point(8, 20);
 			this.optInputText.Name = "optInputText";
-			this.optInputText.Size = new System.Drawing.Size(52, 24);
+			this.optInputText.Size = new System.Drawing.Size(52, 20);
 			this.optInputText.TabIndex = 5;
 			this.optInputText.TabStop = true;
 			this.optInputText.Text = "&Text:";
@@ -381,12 +391,14 @@ namespace Classless.Verifier {
 			// mnuOutputCopy
 			// 
 			this.mnuOutputCopy.Index = 0;
+			this.mnuOutputCopy.Shortcut = System.Windows.Forms.Shortcut.CtrlC;
 			this.mnuOutputCopy.Text = "Copy";
 			// 
 			// mnuOutputSave
 			// 
 			this.mnuOutputSave.Index = 1;
-			this.mnuOutputSave.Text = "Save Output";
+			this.mnuOutputSave.Shortcut = System.Windows.Forms.Shortcut.CtrlS;
+			this.mnuOutputSave.Text = "Save To File";
 			// 
 			// dialogOpen
 			// 

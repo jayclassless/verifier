@@ -16,7 +16,7 @@ Legend: + Added Feature or Functionality
         ! Information About Release
 
 
-Version 0.2 (7/xx/2004)
+Version 0.2 (7/5/2004)
 -----------------------
    [+] Filelists loaded on startup are now optionally processed automatically.
    [+] Application now uses the .config file for storing settings.
@@ -27,10 +27,16 @@ Version 0.2 (7/xx/2004)
    [+] Application now optionally confirms upon exit when list processing is going on.
    [*] FileList reading is now separated into separate classes.
    [+] Added a file icon to mark which file is currently being processed.
-   [+] Application can now optionally remember its window settings (size, etc).
+   [+] Application can now optionally remember its window settings (location, size, etc).
    [X] Fixed the "file is missing" icon.
    [+] Added right-click menu to the file list that allows the clearing of results, or ignoring of files during processing.
    [X] Some MD5Sum programs put an asterisk in front of the filename (indicating "binary" files). Adjusted the regex to handle that.
+   [*] Hash Calculator report now distinguishes between text input and file input.
+   [+] Hash Calculator now reports the number of bytes processed and approximate processing throughput speed.
+   [*] The "Copy" action on the Hash Calculator results now copies the entire contents of the results if no text is selected.
+   [+] Added a few shortcut keys for menu options.
+   [+] Added a processing log. It can be viewed in the GUI and can be saved to a file. There is also a setting to automatically save a log upon processing a list.
+   [+] Added a link to the MPL from the help menu.
 
 
 Version 0.1 (7/1/2004)

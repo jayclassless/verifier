@@ -45,7 +45,7 @@ namespace Classless.Verifier {
 
 			// Finish up.
 			FileList.sourceFile = filename;
-			FileList.type = FileListType.VERIFY;
+			FileList.type = FileListType.VERIFYXML;
 			reader.Close();
 		}
 	}

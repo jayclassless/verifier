@@ -46,6 +46,8 @@ namespace Classless.Verifier {
 		private System.Windows.Forms.Button btnOK;
 		private System.Windows.Forms.GroupBox groupBox1;
 		private System.Windows.Forms.Label lblVerifierDescription;
+		private System.Windows.Forms.Label lblOSNameVersion;
+		private System.Windows.Forms.Label label1;
 		private System.ComponentModel.Container components = null;
 		#endregion
 
@@ -55,33 +57,26 @@ namespace Classless.Verifier {
 			InitializeComponent();
 			StartEventProcessing();
 
-			Version version;
-			AssemblyTitleAttribute title;
 			AssemblyCopyrightAttribute copyright;
 			AssemblyDescriptionAttribute description;
 
 			// Display the Verifier information.
+			lblVerifierNameVersion.Text = Verifier.GetFullTitle(true);
 			copyright = (AssemblyCopyrightAttribute)AssemblyCopyrightAttribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyCopyrightAttribute));
 			description = (AssemblyDescriptionAttribute)AssemblyDescriptionAttribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyDescriptionAttribute));
 			lblVerifierDescription.Text = description.Description;
 			lblVerifierCopyright.Text = "Copyright " + copyright.Copyright;
-			lblVerifierNameVersion.Text = Verifier.GetFullTitle(true);
 
 			// Display the Classless.Hasher information.
-			version = Assembly.GetAssembly(typeof(Classless.Hasher.MD5)).GetName().Version;
-			title = (AssemblyTitleAttribute)AssemblyTitleAttribute.GetCustomAttribute(Assembly.GetAssembly(typeof(Classless.Hasher.MD5)), typeof(AssemblyTitleAttribute));
+			lblHasherNameVersion.Text = Verifier.GetFullTitleHasher();
 			copyright = (AssemblyCopyrightAttribute)AssemblyCopyrightAttribute.GetCustomAttribute(Assembly.GetAssembly(typeof(Classless.Hasher.MD5)), typeof(AssemblyCopyrightAttribute));
 			lblHasherCopyright.Text = "Copyright " + copyright.Copyright;
-			lblHasherNameVersion.Text = title.Title + " v" +
-				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
-				version.Minor.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
 
 			// Display the .NET information.
-			version = Environment.Version;
-			lblNETNameVersion.Text += " v" +
-				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
-				version.Minor.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
-				version.Build.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
+			lblNETNameVersion.Text = Verifier.GetFullTitleNET();
+
+			// Display the OS information.
+			lblOSNameVersion.Text = Classless.Utilities.OperatingSystem.Name + " v" + Classless.Utilities.OperatingSystem.Version.ToString(2) + " (" + Classless.Utilities.OperatingSystem.Version.Build.ToString() + ")";
 		}
 
 
@@ -122,6 +117,8 @@ namespace Classless.Verifier {
 			this.lblNETNameVersion = new System.Windows.Forms.Label();
 			this.btnOK = new System.Windows.Forms.Button();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.label1 = new System.Windows.Forms.Label();
+			this.lblOSNameVersion = new System.Windows.Forms.Label();
 			this.lblVerifierDescription = new System.Windows.Forms.Label();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
@@ -137,9 +134,9 @@ namespace Classless.Verifier {
 			// 
 			this.label2.Location = new System.Drawing.Point(8, 68);
 			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(100, 16);
+			this.label2.Size = new System.Drawing.Size(88, 16);
 			this.label2.TabIndex = 1;
-			this.label2.Text = "Based Upon:";
+			this.label2.Text = "Using:";
 			// 
 			// lblVerifierCopyright
 			// 
@@ -164,16 +161,15 @@ namespace Classless.Verifier {
 			// 
 			// lblNETNameVersion
 			// 
-			this.lblNETNameVersion.Location = new System.Drawing.Point(16, 128);
+			this.lblNETNameVersion.Location = new System.Drawing.Point(16, 148);
 			this.lblNETNameVersion.Name = "lblNETNameVersion";
 			this.lblNETNameVersion.Size = new System.Drawing.Size(212, 16);
 			this.lblNETNameVersion.TabIndex = 5;
-			this.lblNETNameVersion.Text = "Microsoft .NET Framework";
 			// 
 			// btnOK
 			// 
 			this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.btnOK.Location = new System.Drawing.Point(83, 152);
+			this.btnOK.Location = new System.Drawing.Point(83, 188);
 			this.btnOK.Name = "btnOK";
 			this.btnOK.Size = new System.Drawing.Size(80, 23);
 			this.btnOK.TabIndex = 7;
@@ -181,6 +177,8 @@ namespace Classless.Verifier {
 			// 
 			// groupBox1
 			// 
+			this.groupBox1.Controls.Add(this.label1);
+			this.groupBox1.Controls.Add(this.lblOSNameVersion);
 			this.groupBox1.Controls.Add(this.lblVerifierDescription);
 			this.groupBox1.Controls.Add(this.lblHasherNameVersion);
 			this.groupBox1.Controls.Add(this.lblHasherCopyright);
@@ -190,9 +188,24 @@ namespace Classless.Verifier {
 			this.groupBox1.Controls.Add(this.lblVerifierCopyright);
 			this.groupBox1.Location = new System.Drawing.Point(4, 0);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(236, 148);
+			this.groupBox1.Size = new System.Drawing.Size(236, 184);
 			this.groupBox1.TabIndex = 8;
 			this.groupBox1.TabStop = false;
+			// 
+			// label1
+			// 
+			this.label1.Location = new System.Drawing.Point(8, 128);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(88, 16);
+			this.label1.TabIndex = 9;
+			this.label1.Text = "Running on:";
+			// 
+			// lblOSNameVersion
+			// 
+			this.lblOSNameVersion.Location = new System.Drawing.Point(16, 164);
+			this.lblOSNameVersion.Name = "lblOSNameVersion";
+			this.lblOSNameVersion.Size = new System.Drawing.Size(212, 16);
+			this.lblOSNameVersion.TabIndex = 8;
 			// 
 			// lblVerifierDescription
 			// 
@@ -205,7 +218,7 @@ namespace Classless.Verifier {
 			// 
 			this.AcceptButton = this.btnOK;
 			this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-			this.ClientSize = new System.Drawing.Size(246, 179);
+			this.ClientSize = new System.Drawing.Size(246, 215);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.btnOK);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;

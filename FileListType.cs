@@ -32,7 +32,7 @@ namespace Classless.Verifier {
 	/// <summary>The type of file verification list.</summary>
 	public enum FileListType {
 		/// <summary>VerifyXML File Verification List</summary>
-		VERIFY,
+		VERIFYXML,
 
 		/// <summary>Simple File Verification</summary>
 		SFV,

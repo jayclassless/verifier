@@ -50,6 +50,9 @@ namespace Classless.Verifier {
 		NotFound,
 
 		/// <summary>The file is the wrong size.</summary>
-		WrongSize
+		WrongSize,
+
+		/// <summary>The file was ignored.</summary>
+		Ignored
 	}
 }

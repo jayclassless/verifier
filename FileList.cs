@@ -38,7 +38,7 @@ namespace Classless.Verifier {
 	public class FileList {
 		/// <summary>The type of file list that this class originally was when read.</summary>
 		[XmlIgnoreAttribute()]
-		public FileListType type = FileListType.VERIFY;
+		public FileListType type = FileListType.VERIFYXML;
 
 		/// <summary>The original source file this file list was read from.</summary>
 		[XmlIgnoreAttribute()]

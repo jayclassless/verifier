@@ -41,34 +41,38 @@ namespace Classless.Verifier {
 		#region Control Declarations
 		private ProgressStatusBar barStatus;
 
-		private System.Windows.Forms.MainMenu mnuMain;
 		private System.Windows.Forms.OpenFileDialog dialogOpen;
+		private System.Windows.Forms.MainMenu mnuMain;
 		private System.Windows.Forms.MenuItem mnuFile;
-		private System.Windows.Forms.MenuItem mnuTools;
-		private System.Windows.Forms.MenuItem mnuHelp;
-		private System.Windows.Forms.MenuItem menuItem5;
-		private System.Windows.Forms.MenuItem mnuHelpAbout;
-		private System.Windows.Forms.MenuItem mnuHelpHomePage;
-		private System.Windows.Forms.MenuItem mnuHelpClassless;
 		private System.Windows.Forms.MenuItem mnuFileOpen;
-		private System.Windows.Forms.MenuItem menuItem4;
 		private System.Windows.Forms.MenuItem mnuFileVerify;
-		private System.Windows.Forms.MenuItem menuItem7;
+		private System.Windows.Forms.MenuItem mnuFileViewLog;
 		private System.Windows.Forms.MenuItem mnuFileExit;
+		private System.Windows.Forms.MenuItem mnuTools;
 		private System.Windows.Forms.MenuItem mnuToolsCalculator;
+		private System.Windows.Forms.MenuItem mnuToolsCreateFileList;
+		private System.Windows.Forms.MenuItem mnuHelp;
+		private System.Windows.Forms.MenuItem mnuHelpHomePage;
+		private System.Windows.Forms.MenuItem mnuHelpXMLHomePage;
+		private System.Windows.Forms.MenuItem mnuHelpClassless;
+		private System.Windows.Forms.MenuItem mnuHelpMPL;
+		private System.Windows.Forms.MenuItem mnuHelpAbout;
+		private System.Windows.Forms.ContextMenu mnuFiles;
+		private System.Windows.Forms.MenuItem mnuFilesIgnoreProcessing;
+		private System.Windows.Forms.MenuItem mnuFilesClearResults;
+		private System.Windows.Forms.MenuItem mnuFilesUnIgnoreAll;
+		private System.Windows.Forms.MenuItem menuItem2;
+		private System.Windows.Forms.MenuItem menuItem4;
+		private System.Windows.Forms.MenuItem menuItem5;
+		private System.Windows.Forms.MenuItem menuItem7;
 		private System.Windows.Forms.StatusBarPanel panelStatus;
 		private System.Windows.Forms.StatusBarPanel panelProgress;
 		private System.Windows.Forms.ListView listFiles;
 		private System.Windows.Forms.ColumnHeader colFilesFile;
 		private System.Windows.Forms.ColumnHeader colFilesHash;
 		private System.Windows.Forms.ColumnHeader colFilesType;
-		private System.Windows.Forms.MenuItem mnuHelpXMLHomePage;
 		private System.Windows.Forms.Button btnVerify;
 		private System.Windows.Forms.ImageList ilFileIcons;
-		private System.Windows.Forms.ContextMenu mnuFiles;
-		private System.Windows.Forms.MenuItem mnuFilesIgnoreProcessing;
-		private System.Windows.Forms.MenuItem menuItem2;
-		private System.Windows.Forms.MenuItem mnuFilesClearResults;
 		private System.ComponentModel.IContainer components;
 		#endregion
 
@@ -80,13 +84,13 @@ namespace Classless.Verifier {
 		private int fileListGood;
 		private int fileListBad;
 		private int fileListMissing;
+		private int fileListIgnored;
 
 		// A flag so we can tell when this window has loaded.
 		private bool firstLoad;
 
 		// File list processor objects.
 		private FileListProcessor listProcessor;
-		private System.Windows.Forms.MenuItem mnuFilesUnIgnoreAll;
 		private Thread listProcessorThread;
 
 
@@ -133,9 +137,23 @@ namespace Classless.Verifier {
 				(int)AppConfig.Instance.GetValue("MainWindowSizeWidth", typeof(int), this.Size.Width),
 				(int)AppConfig.Instance.GetValue("MainWindowSizeHeight", typeof(int), this.Size.Height)
 			);
+			this.Location = new Point(
+				(int)AppConfig.Instance.GetValue("MainWindowLocationX", typeof(int), ((Screen.PrimaryScreen.Bounds.Width - this.Size.Width) / 2)),
+				(int)AppConfig.Instance.GetValue("MainWindowLocationY", typeof(int), ((Screen.PrimaryScreen.Bounds.Height - this.Size.Height) / 2))
+			);
 			this.colFilesFile.Width = (int)AppConfig.Instance.GetValue("MainListFileWidth", typeof(int), this.colFilesFile.Width);
 			this.colFilesType.Width = (int)AppConfig.Instance.GetValue("MainListTypeWidth", typeof(int), this.colFilesType.Width);
 			this.colFilesHash.Width = (int)AppConfig.Instance.GetValue("MainListHashWidth", typeof(int), this.colFilesHash.Width);
+
+			// Establish last window settings for the log.
+			FrmLog.Instance.Size = new Size( 
+				(int)AppConfig.Instance.GetValue("LogWindowSizeWidth", typeof(int), FrmLog.Instance.Size.Width),
+				(int)AppConfig.Instance.GetValue("LogWindowSizeHeight", typeof(int), FrmLog.Instance.Size.Height)
+			);
+			FrmLog.Instance.Location = new Point(
+				(int)AppConfig.Instance.GetValue("LogWindowLocationX", typeof(int), 0),
+				(int)AppConfig.Instance.GetValue("LogWindowLocationY", typeof(int), 0)
+			);
 		}
 
 
@@ -179,22 +197,40 @@ namespace Classless.Verifier {
 		}
 
 
-		// Save information about the window's size, etc.
+		// Save information about the windows' size, etc.
 		private void SaveSettings() {
 			if ((bool)AppConfig.Instance.GetValue("RememberWindowSettings", typeof(bool), true)) {
+				// Only do this if we're not maximized or minimized.
 				if (this.WindowState == FormWindowState.Normal) {
-					AppConfig.Instance.SetValue("MainWindowSizeWidth", this.Size.Width.ToString());
-					AppConfig.Instance.SetValue("MainWindowSizeHeight", this.Size.Height.ToString());
-					AppConfig.Instance.SetValue("MainListFileWidth", this.colFilesFile.Width.ToString());
-					AppConfig.Instance.SetValue("MainListTypeWidth", this.colFilesType.Width.ToString());
-					AppConfig.Instance.SetValue("MainListHashWidth", this.colFilesHash.Width.ToString());
+					AppConfig.Instance.SetValue("MainWindowSizeWidth", this.Size.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainWindowSizeHeight", this.Size.Height.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainWindowLocationX", this.Location.X.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainWindowLocationY", this.Location.Y.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainListFileWidth", this.colFilesFile.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainListTypeWidth", this.colFilesType.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					AppConfig.Instance.SetValue("MainListHashWidth", this.colFilesHash.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
 				}
+
+				// Log window.
+				AppConfig.Instance.SetValue("LogWindowSizeWidth", FrmLog.Instance.Size.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+				AppConfig.Instance.SetValue("LogWindowSizeHeight", FrmLog.Instance.Size.Height.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+				AppConfig.Instance.SetValue("LogWindowLocationX", FrmLog.Instance.Location.X.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+				AppConfig.Instance.SetValue("LogWindowLocationY", FrmLog.Instance.Location.Y.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
 			} else {
+				// Main window.
 				AppConfig.Instance.RemoveElement("MainWindowSizeWidth");
 				AppConfig.Instance.RemoveElement("MainWindowSizeHeight");
+				AppConfig.Instance.RemoveElement("MainWindowLocationX");
+				AppConfig.Instance.RemoveElement("MainWindowLocationY");
 				AppConfig.Instance.RemoveElement("MainListFileWidth");
 				AppConfig.Instance.RemoveElement("MainListTypeWidth");
 				AppConfig.Instance.RemoveElement("MainListHashWidth");
+
+				// Log window.
+				AppConfig.Instance.RemoveElement("LogWindowSizeWidth");
+				AppConfig.Instance.RemoveElement("LogWindowSizeHeight");
+				AppConfig.Instance.RemoveElement("LogWindowLocationX");
+				AppConfig.Instance.RemoveElement("LogWindowLocationY");
 			}
 		}
 
@@ -227,15 +263,16 @@ namespace Classless.Verifier {
 				lvi.ImageIndex = 0;
 			}
 			Application.DoEvents();
-			fileListGood = fileListBad = fileListMissing = 0;
+			fileListGood = fileListBad = fileListMissing = fileListIgnored = 0;
+			FrmLog.Instance.ClearLines();
 		}
 
 
 		#region Events
 		// Hook into the event processing.
 		private void StartEventProcessing() {
-			this.Activated +=new System.EventHandler(this.FrmMain_Activated);
-			this.Closing +=new CancelEventHandler(this.FrmMain_Closing);
+			this.Activated += new System.EventHandler(this.FrmMain_Activated);
+			this.Closing += new CancelEventHandler(this.FrmMain_Closing);
 			listFiles.DragEnter += new DragEventHandler(this.listFiles_DragEnter);
 			listFiles.DragDrop += new DragEventHandler(this.listFiles_DragDrop);
 			mnuFilesIgnoreProcessing.Click += new System.EventHandler(this.mnuFilesIgnoreProcessing_Click);
@@ -244,11 +281,13 @@ namespace Classless.Verifier {
 			btnVerify.Click += new System.EventHandler(this.initiateVerify);
 			mnuFileOpen.Click += new System.EventHandler(this.mnuFileOpen_Click);
 			mnuFileVerify.Click += new System.EventHandler(this.initiateVerify);
+			mnuFileViewLog.Click += new System.EventHandler(this.mnuFileViewLog_Click);
 			mnuFileExit.Click += new System.EventHandler(this.mnuFileExit_Click);
 			mnuToolsCalculator.Click += new System.EventHandler(this.mnuToolsCalculator_Click);
 			mnuHelpHomePage.Click += new System.EventHandler(this.mnuHelpHomePage_Click);
 			mnuHelpXMLHomePage.Click += new System.EventHandler(this.mnuHelpXMLHomePage_Click);
 			mnuHelpClassless.Click += new System.EventHandler(this.mnuHelpClassless_Click);
+			mnuHelpMPL.Click += new System.EventHandler(this.mnuHelpMPL_Click);
 			mnuHelpAbout.Click += new System.EventHandler(this.mnuHelpAbout_Click);
 		}
 
@@ -341,7 +380,6 @@ namespace Classless.Verifier {
 				// We have to check if it's still processing, in case they took too long with the messagebox.
 				if (listProcessorThread != null) {
 					listProcessorThread.Abort();
-					processorCompletion(sender, new CompletionEventArgs());
 				}
 				return;
 			}
@@ -353,6 +391,13 @@ namespace Classless.Verifier {
 			listProcessor = new FileListProcessor(FileList);
 			listProcessor.Progress += new FileListProcessor.ProgressEventHandler(this.processorProgress);
 			listProcessor.Completion += new FileListProcessor.CompletionEventHandler(this.processorCompletion);
+
+			// Start the log.
+			FrmLog.Instance.AddHeader();
+			FrmLog.Instance.AddLine("      File List: " + FileList.sourceFile);
+			FrmLog.Instance.AddLine("      List Type: " + FileList.type.ToString());
+			FrmLog.Instance.AddLine("          Start: " + DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'sszzz"));
+			FrmLog.Instance.AddLine();
 
 			// Lock up the GUI.
 			LockGUI();
@@ -376,6 +421,7 @@ namespace Classless.Verifier {
 						case FileListProcessorStatus.Error: lvi.ImageIndex = 2; fileListBad++; break;
 						case FileListProcessorStatus.InProcess: lvi.ImageIndex = 4; break;
 						case FileListProcessorStatus.WrongSize: lvi.ImageIndex = 2; fileListBad++; break;
+						case FileListProcessorStatus.Ignored: fileListIgnored++; break;
 					}
 
 					// Scroll if needed.
@@ -413,10 +459,31 @@ namespace Classless.Verifier {
 
 			// If there's an error, show it to the user.
 			if (args.Exception != null) {
-				MessageBox.Show("There was an error while processing the files:" +
-					Environment.NewLine + Environment.NewLine +
-					args.Exception.Message,
-					"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				FrmLog.Instance.AddLine();
+
+				if (args.Exception is ThreadAbortException) {
+					FrmLog.Instance.AddLine("--Processing Aborted by User--");
+				} else {
+					FrmLog.Instance.AddLine("--Error: " + args.Exception.Message + "--");
+					MessageBox.Show("There was an error while processing the files:" +
+						Environment.NewLine + Environment.NewLine +
+						args.Exception.Message,
+						"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+
+			// Put final results into the log.
+			FrmLog.Instance.AddLine();
+			FrmLog.Instance.AddLine("    Total Files: " + listFiles.Items.Count.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+			FrmLog.Instance.AddLine("Files Processed: " + (fileListGood + fileListBad + fileListMissing + fileListIgnored).ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+			FrmLog.Instance.AddLine("     Good Files: " + fileListGood.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+			FrmLog.Instance.AddLine("      Bad Files: " + fileListBad.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+			FrmLog.Instance.AddLine("  Missing Files: " + fileListMissing.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+			FrmLog.Instance.AddLine("       Finished: " + DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'sszzz"));
+
+			// Save the log.
+			if ((bool)AppConfig.Instance.GetValue("AutomaticallySaveLog", typeof(bool), false)) {
+				FrmLog.Instance.Save(Path.ChangeExtension(FileList.sourceFile, ".log"));
 			}
 		}
 
@@ -427,6 +494,12 @@ namespace Classless.Verifier {
 			if (dr == DialogResult.OK) {
 				OpenFileList(dialogOpen.FileName);
 			}
+		}
+
+		// User wants to view the processing log.
+		private void mnuFileViewLog_Click(object sender, System.EventArgs args) {
+			FrmLog.Instance.Show();
+			FrmLog.Instance.Activate();
 		}
 
 		// User wants to quit.
@@ -455,6 +528,11 @@ namespace Classless.Verifier {
 			OpenURL("http://www.classless.net/");
 		}
 
+		// User wants to view the MPL.
+		private void mnuHelpMPL_Click(object sender, System.EventArgs args) {
+			OpenURL("http://www.mozilla.org/MPL/MPL-1.1.html");
+		}
+
 		// User wants to view the about window.
 		private void mnuHelpAbout_Click(object sender, System.EventArgs args) {
 			FrmAbout fa = new FrmAbout();
@@ -477,10 +555,12 @@ namespace Classless.Verifier {
 			this.mnuFileOpen = new System.Windows.Forms.MenuItem();
 			this.menuItem4 = new System.Windows.Forms.MenuItem();
 			this.mnuFileVerify = new System.Windows.Forms.MenuItem();
+			this.mnuFileViewLog = new System.Windows.Forms.MenuItem();
 			this.menuItem7 = new System.Windows.Forms.MenuItem();
 			this.mnuFileExit = new System.Windows.Forms.MenuItem();
 			this.mnuTools = new System.Windows.Forms.MenuItem();
 			this.mnuToolsCalculator = new System.Windows.Forms.MenuItem();
+			this.mnuToolsCreateFileList = new System.Windows.Forms.MenuItem();
 			this.mnuHelp = new System.Windows.Forms.MenuItem();
 			this.mnuHelpHomePage = new System.Windows.Forms.MenuItem();
 			this.mnuHelpXMLHomePage = new System.Windows.Forms.MenuItem();
@@ -495,13 +575,14 @@ namespace Classless.Verifier {
 			this.colFilesFile = new System.Windows.Forms.ColumnHeader();
 			this.colFilesType = new System.Windows.Forms.ColumnHeader();
 			this.colFilesHash = new System.Windows.Forms.ColumnHeader();
-			this.ilFileIcons = new System.Windows.Forms.ImageList(this.components);
-			this.btnVerify = new System.Windows.Forms.Button();
 			this.mnuFiles = new System.Windows.Forms.ContextMenu();
 			this.mnuFilesIgnoreProcessing = new System.Windows.Forms.MenuItem();
 			this.menuItem2 = new System.Windows.Forms.MenuItem();
-			this.mnuFilesClearResults = new System.Windows.Forms.MenuItem();
 			this.mnuFilesUnIgnoreAll = new System.Windows.Forms.MenuItem();
+			this.mnuFilesClearResults = new System.Windows.Forms.MenuItem();
+			this.ilFileIcons = new System.Windows.Forms.ImageList(this.components);
+			this.btnVerify = new System.Windows.Forms.Button();
+			this.mnuHelpMPL = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.panelStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.panelProgress)).BeginInit();
 			this.SuspendLayout();
@@ -520,6 +601,7 @@ namespace Classless.Verifier {
 																					this.mnuFileOpen,
 																					this.menuItem4,
 																					this.mnuFileVerify,
+																					this.mnuFileViewLog,
 																					this.menuItem7,
 																					this.mnuFileExit});
 			this.mnuFile.Text = "&File";
@@ -538,16 +620,23 @@ namespace Classless.Verifier {
 			// mnuFileVerify
 			// 
 			this.mnuFileVerify.Index = 2;
+			this.mnuFileVerify.Shortcut = System.Windows.Forms.Shortcut.F5;
 			this.mnuFileVerify.Text = "&Verify List";
+			// 
+			// mnuFileViewLog
+			// 
+			this.mnuFileViewLog.Index = 3;
+			this.mnuFileViewLog.Shortcut = System.Windows.Forms.Shortcut.CtrlL;
+			this.mnuFileViewLog.Text = "View &Log";
 			// 
 			// menuItem7
 			// 
-			this.menuItem7.Index = 3;
+			this.menuItem7.Index = 4;
 			this.menuItem7.Text = "-";
 			// 
 			// mnuFileExit
 			// 
-			this.mnuFileExit.Index = 4;
+			this.mnuFileExit.Index = 5;
 			this.mnuFileExit.Shortcut = System.Windows.Forms.Shortcut.AltF4;
 			this.mnuFileExit.Text = "E&xit";
 			// 
@@ -555,13 +644,20 @@ namespace Classless.Verifier {
 			// 
 			this.mnuTools.Index = 1;
 			this.mnuTools.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
-																					 this.mnuToolsCalculator});
+																					 this.mnuToolsCalculator,
+																					 this.mnuToolsCreateFileList});
 			this.mnuTools.Text = "&Tools";
 			// 
 			// mnuToolsCalculator
 			// 
 			this.mnuToolsCalculator.Index = 0;
 			this.mnuToolsCalculator.Text = "&Calculator";
+			// 
+			// mnuToolsCreateFileList
+			// 
+			this.mnuToolsCreateFileList.Enabled = false;
+			this.mnuToolsCreateFileList.Index = 1;
+			this.mnuToolsCreateFileList.Text = "Create File &List";
 			// 
 			// mnuHelp
 			// 
@@ -571,6 +667,7 @@ namespace Classless.Verifier {
 																					this.mnuHelpXMLHomePage,
 																					this.mnuHelpClassless,
 																					this.menuItem5,
+																					this.mnuHelpMPL,
 																					this.mnuHelpAbout});
 			this.mnuHelp.Text = "&Help";
 			// 
@@ -582,12 +679,12 @@ namespace Classless.Verifier {
 			// mnuHelpXMLHomePage
 			// 
 			this.mnuHelpXMLHomePage.Index = 1;
-			this.mnuHelpXMLHomePage.Text = "Verifier&XML Home Page";
+			this.mnuHelpXMLHomePage.Text = "Verify&XML Home Page";
 			// 
 			// mnuHelpClassless
 			// 
 			this.mnuHelpClassless.Index = 2;
-			this.mnuHelpClassless.Text = "C&lassless.net";
+			this.mnuHelpClassless.Text = "&Classless.net";
 			// 
 			// menuItem5
 			// 
@@ -596,7 +693,7 @@ namespace Classless.Verifier {
 			// 
 			// mnuHelpAbout
 			// 
-			this.mnuHelpAbout.Index = 4;
+			this.mnuHelpAbout.Index = 5;
 			this.mnuHelpAbout.Text = "&About";
 			// 
 			// barStatus
@@ -661,22 +758,6 @@ namespace Classless.Verifier {
 			this.colFilesHash.Text = "Hash";
 			this.colFilesHash.Width = 230;
 			// 
-			// ilFileIcons
-			// 
-			this.ilFileIcons.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
-			this.ilFileIcons.ImageSize = new System.Drawing.Size(16, 16);
-			this.ilFileIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ilFileIcons.ImageStream")));
-			this.ilFileIcons.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// btnVerify
-			// 
-			this.btnVerify.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.btnVerify.Location = new System.Drawing.Point(0, 210);
-			this.btnVerify.Name = "btnVerify";
-			this.btnVerify.Size = new System.Drawing.Size(552, 23);
-			this.btnVerify.TabIndex = 2;
-			this.btnVerify.Text = "&Verify Files";
-			// 
 			// mnuFiles
 			// 
 			this.mnuFiles.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
@@ -695,15 +776,36 @@ namespace Classless.Verifier {
 			this.menuItem2.Index = 1;
 			this.menuItem2.Text = "-";
 			// 
+			// mnuFilesUnIgnoreAll
+			// 
+			this.mnuFilesUnIgnoreAll.Index = 2;
+			this.mnuFilesUnIgnoreAll.Text = "Un-Ignore All";
+			// 
 			// mnuFilesClearResults
 			// 
 			this.mnuFilesClearResults.Index = 3;
 			this.mnuFilesClearResults.Text = "Clear Results";
 			// 
-			// mnuFilesUnIgnoreAll
+			// ilFileIcons
 			// 
-			this.mnuFilesUnIgnoreAll.Index = 2;
-			this.mnuFilesUnIgnoreAll.Text = "Un-Ignore All";
+			this.ilFileIcons.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
+			this.ilFileIcons.ImageSize = new System.Drawing.Size(16, 16);
+			this.ilFileIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("ilFileIcons.ImageStream")));
+			this.ilFileIcons.TransparentColor = System.Drawing.Color.Transparent;
+			// 
+			// btnVerify
+			// 
+			this.btnVerify.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.btnVerify.Location = new System.Drawing.Point(0, 210);
+			this.btnVerify.Name = "btnVerify";
+			this.btnVerify.Size = new System.Drawing.Size(552, 23);
+			this.btnVerify.TabIndex = 2;
+			this.btnVerify.Text = "&Verify Files";
+			// 
+			// mnuHelpMPL
+			// 
+			this.mnuHelpMPL.Index = 4;
+			this.mnuHelpMPL.Text = "&Mozilla Public License";
 			// 
 			// FrmMain
 			// 
@@ -715,7 +817,7 @@ namespace Classless.Verifier {
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Menu = this.mnuMain;
 			this.Name = "FrmMain";
-			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "Verifier";
 			((System.ComponentModel.ISupportInitialize)(this.panelStatus)).EndInit();
 			((System.ComponentModel.ISupportInitialize)(this.panelProgress)).EndInit();

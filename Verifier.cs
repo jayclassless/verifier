@@ -28,6 +28,7 @@
 
 using System;
 using System.Windows.Forms;
+using System.Reflection;
 
 namespace Classless.Verifier {
 	/// <summary>The starting point of the application.</summary>
@@ -73,8 +74,8 @@ namespace Classless.Verifier {
 		/// <param name="build">Include the build number in the version.</param>
 		/// <returns>Full title with version number.</returns>
 		static public string GetFullTitle(bool build) {
-			Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-			System.Reflection.AssemblyTitleAttribute title = (System.Reflection.AssemblyTitleAttribute)System.Reflection.AssemblyTitleAttribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyTitleAttribute));
+			Version version = Assembly.GetExecutingAssembly().GetName().Version;
+			AssemblyTitleAttribute title = (AssemblyTitleAttribute)AssemblyTitleAttribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyTitleAttribute));
 
 			string temp = title.Title + " v" +
 				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
@@ -85,6 +86,40 @@ namespace Classless.Verifier {
 			}
 
 			return temp;
+		}
+
+
+		/// <summary>Generates the full title of the .NET framework with version number.</summary>
+		/// <returns>Full title with version number.</returns>
+		static public string GetFullTitleNET() {
+			Version version = Environment.Version;
+			string temp;
+
+#if NET
+			temp = "Microsoft .NET Framework";
+#elif MONO
+			temp = "Mono";
+#else
+			temp = "Framework";
+#endif
+
+			return temp += " v" +
+				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
+				version.Minor.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + " (" +
+				version.Build.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + ")";
+		}
+
+
+		/// <summary>Generates the full title of the Hasher library with version number.</summary>
+		/// <returns>Full title with version number.</returns>
+		static public string GetFullTitleHasher() {
+			Version version = Assembly.GetAssembly(typeof(Classless.Hasher.MD5)).GetName().Version;
+			AssemblyTitleAttribute title = (AssemblyTitleAttribute)AssemblyTitleAttribute.GetCustomAttribute(Assembly.GetAssembly(typeof(Classless.Hasher.MD5)), typeof(AssemblyTitleAttribute));
+
+			return title.Title + " v" +
+				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
+				version.Minor.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + " (" +
+				version.Build.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + ")";
 		}
 
 
