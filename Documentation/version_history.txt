@@ -1,7 +1,7 @@
 Verifier
 A File Verification Utility
 (c)2004 Classless.net
-http://www.classless.net/projects/verifier/
+http://verifier.sourceforge.net/
 
 -----------------------------------
 
@@ -14,6 +14,23 @@ Legend: + Added Feature or Functionality
         * Improved/Changed Feature or Functionality
         X Bug Fix
         ! Information About Release
+
+
+Version 0.2 (7/xx/2004)
+-----------------------
+   [+] Filelists loaded on startup are now optionally processed automatically.
+   [+] Application now uses the .config file for storing settings.
+   [+] Processing thread priority is now configurable.
+   [X] Fix a bug where sometimes the FileListProcessor would report more than 100% complete, which caused crashes.
+   [+] Dragging a file list onto the application will now open it.
+   [+] List processing can now be stopped before completion.
+   [+] Application now optionally confirms upon exit when list processing is going on.
+   [*] FileList reading is now separated into separate classes.
+   [+] Added a file icon to mark which file is currently being processed.
+   [+] Application can now optionally remember its window settings (size, etc).
+   [X] Fixed the "file is missing" icon.
+   [+] Added right-click menu to the file list that allows the clearing of results, or ignoring of files during processing.
+   [X] Some MD5Sum programs put an asterisk in front of the filename (indicating "binary" files). Adjusted the regex to handle that.
 
 
 Version 0.1 (7/1/2004)

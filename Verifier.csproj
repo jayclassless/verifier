@@ -48,7 +48,7 @@
                     BaseAddress = "285212672"
                     CheckForOverflowUnderflow = "false"
                     ConfigurationOverrideFile = ""
-                    DefineConstants = "TRACE"
+                    DefineConstants = "TRACE;STRONGNAME"
                     DocumentationFile = ""
                     DebugSymbols = "false"
                     FileAlignment = "4096"
@@ -59,7 +59,7 @@
                     OutputPath = "bin\Release\"
                     RegisterForComInterop = "false"
                     RemoveIntegerChecks = "false"
-                    TreatWarningsAsErrors = "false"
+                    TreatWarningsAsErrors = "true"
                     WarningLevel = "4"
                 />
             </Settings>
@@ -118,6 +118,11 @@
                     BuildAction = "None"
                 />
                 <File
+                    RelPath = "AppConfig.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "AssemblyInfo.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -149,6 +154,11 @@
                 />
                 <File
                     RelPath = "FileListProcessorStatus.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FileListReader.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -203,6 +213,16 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "MD5FileListReader.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "MD5SumFileListReader.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "ProgressEventArgs.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
@@ -228,7 +248,17 @@
                     BuildAction = "Compile"
                 />
                 <File
+                    RelPath = "SFVFileListReader.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
                     RelPath = "Verifier.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "VerifyXMLFileListReader.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -242,6 +272,10 @@
                 />
                 <File
                     RelPath = "Images\good.ico"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "Images\inprocess.ico"
                     BuildAction = "Content"
                 />
                 <File

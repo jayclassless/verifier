@@ -44,7 +44,7 @@ namespace Classless.Verifier {
 				} catch (FileTypeException) {
 					// Unknown format.
 					MessageBox.Show(args[0] + " does not contain a supported file verification list format.",
-						"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				} catch (Exception ex) {
 					// Bad error.
 					MessageBox.Show("Could not open file verification list:" +
@@ -52,7 +52,7 @@ namespace Classless.Verifier {
 						args[0] +
 						Environment.NewLine + Environment.NewLine +
 						ex.Message,
-						"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				}
 			}
 
@@ -66,22 +66,32 @@ namespace Classless.Verifier {
 		private Verifier() {}
 
 
-		/// <summary>Generates the full title  of this application with version number.</summary>
+		/// <summary>Generates the full title of this application with version number.</summary>
 		/// <returns>Full title with version number.</returns>
-		static public string GetFullTitle() {
+		static public string GetFullTitle() { return GetFullTitle(false); }
+		/// <summary>Generates the full title of this application with version number.</summary>
+		/// <param name="build">Include the build number in the version.</param>
+		/// <returns>Full title with version number.</returns>
+		static public string GetFullTitle(bool build) {
 			Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 			System.Reflection.AssemblyTitleAttribute title = (System.Reflection.AssemblyTitleAttribute)System.Reflection.AssemblyTitleAttribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyTitleAttribute));
 
-			return title.Title + " v" +
+			string temp = title.Title + " v" +
 				version.Major.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + "." +
 				version.Minor.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat);
+
+			if (build) {
+				temp += " (" + version.Build.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat) + ")";
+			}
+
+			return temp;
 		}
 
 
 		/// <summary>Returns the URL of the application's home page.</summary>
 		/// <returns>The application URL.</returns>
 		static public string GetHomePage() {
-			return "http://www.classless.net/projects/verifier/";
+			return "http://verifier.sourceforge.net/";
 		}
 	}
 }

@@ -61,19 +61,32 @@ namespace Classless.Verifier {
 		private System.Windows.Forms.ListView listFiles;
 		private System.Windows.Forms.ColumnHeader colFilesFile;
 		private System.Windows.Forms.ColumnHeader colFilesHash;
+		private System.Windows.Forms.ColumnHeader colFilesType;
 		private System.Windows.Forms.MenuItem mnuHelpXMLHomePage;
 		private System.Windows.Forms.Button btnVerify;
 		private System.Windows.Forms.ImageList ilFileIcons;
+		private System.Windows.Forms.ContextMenu mnuFiles;
+		private System.Windows.Forms.MenuItem mnuFilesIgnoreProcessing;
+		private System.Windows.Forms.MenuItem menuItem2;
+		private System.Windows.Forms.MenuItem mnuFilesClearResults;
 		private System.ComponentModel.IContainer components;
 		#endregion
 
 
+		// The currently open file list.
 		private FileList fileList;
+
+		// Tallies of the file list's processing.
 		private int fileListGood;
 		private int fileListBad;
 		private int fileListMissing;
+
+		// A flag so we can tell when this window has loaded.
+		private bool firstLoad;
+
+		// File list processor objects.
 		private FileListProcessor listProcessor;
-		private System.Windows.Forms.ColumnHeader colFilesType;
+		private System.Windows.Forms.MenuItem mnuFilesUnIgnoreAll;
 		private Thread listProcessorThread;
 
 
@@ -108,13 +121,21 @@ namespace Classless.Verifier {
 
 		/// <summary>Initializes an instance of FrmMain.</summary>
 		public FrmMain() {
+			// Initialize some variables.
+			firstLoad = true;
+
+			// Build the form.
 			InitializeComponent();
 			StartEventProcessing();
 
-			// Set up the progress bar.
-			barStatus.ProgressBarPanel = 1;
-			barStatus.ProgressBar.Minimum = 0;
-			barStatus.ProgressBar.Maximum = 100;
+			// Establish last window settings.
+			this.Size = new Size(
+				(int)AppConfig.Instance.GetValue("MainWindowSizeWidth", typeof(int), this.Size.Width),
+				(int)AppConfig.Instance.GetValue("MainWindowSizeHeight", typeof(int), this.Size.Height)
+			);
+			this.colFilesFile.Width = (int)AppConfig.Instance.GetValue("MainListFileWidth", typeof(int), this.colFilesFile.Width);
+			this.colFilesType.Width = (int)AppConfig.Instance.GetValue("MainListTypeWidth", typeof(int), this.colFilesType.Width);
+			this.colFilesHash.Width = (int)AppConfig.Instance.GetValue("MainListHashWidth", typeof(int), this.colFilesHash.Width);
 		}
 
 
@@ -135,13 +156,12 @@ namespace Classless.Verifier {
 
 		// Lock the GUI so the user can't do anything harmful while we're processing.
 		private void LockGUI() {
-			btnVerify.Text = "Please wait...";
-			btnVerify.Enabled = false;
+			btnVerify.Text = "Processing list. Press again to stop.";
 			mnuFileOpen.Enabled = false;
 			mnuFileVerify.Enabled = false;
 			mnuFileExit.Enabled = false;
-			this.Cursor = Cursors.WaitCursor;
-			listFiles.Cursor = Cursors.WaitCursor;
+			this.Cursor = Cursors.AppStarting;
+			listFiles.Cursor = Cursors.AppStarting;
 			Application.DoEvents();
 		}
 
@@ -149,7 +169,6 @@ namespace Classless.Verifier {
 		// Unlock the GUI.
 		private void UnlockGUI() {
 			btnVerify.Text = "&Verify Files";
-			btnVerify.Enabled = true;
 			mnuFileOpen.Enabled = true;
 			mnuFileVerify.Enabled = true;
 			mnuFileExit.Enabled = true;
@@ -160,9 +179,68 @@ namespace Classless.Verifier {
 		}
 
 
+		// Save information about the window's size, etc.
+		private void SaveSettings() {
+			if ((bool)AppConfig.Instance.GetValue("RememberWindowSettings", typeof(bool), true)) {
+				if (this.WindowState == FormWindowState.Normal) {
+					AppConfig.Instance.SetValue("MainWindowSizeWidth", this.Size.Width.ToString());
+					AppConfig.Instance.SetValue("MainWindowSizeHeight", this.Size.Height.ToString());
+					AppConfig.Instance.SetValue("MainListFileWidth", this.colFilesFile.Width.ToString());
+					AppConfig.Instance.SetValue("MainListTypeWidth", this.colFilesType.Width.ToString());
+					AppConfig.Instance.SetValue("MainListHashWidth", this.colFilesHash.Width.ToString());
+				}
+			} else {
+				AppConfig.Instance.RemoveElement("MainWindowSizeWidth");
+				AppConfig.Instance.RemoveElement("MainWindowSizeHeight");
+				AppConfig.Instance.RemoveElement("MainListFileWidth");
+				AppConfig.Instance.RemoveElement("MainListTypeWidth");
+				AppConfig.Instance.RemoveElement("MainListHashWidth");
+			}
+		}
+
+
+		// Open a file list.
+		private void OpenFileList(string filename) {
+			try {
+				FileList = new FileList(filename);
+			} catch (FileTypeException) {
+				// Unknown format.
+				MessageBox.Show(filename + " is not a supported file verification list format.",
+					"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			} catch (Exception ex) {
+				// Bad error.
+				MessageBox.Show("Could not open file verification list:" +
+					Environment.NewLine + Environment.NewLine +
+					filename +
+					Environment.NewLine + Environment.NewLine +
+					ex.Message,
+					"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+		}
+
+
+		// Clear the results of a previous processing.
+		private void ClearResults() {
+			panelStatus.Text = string.Empty;
+			barStatus.ProgressBar.Value = 0;
+			foreach (ListViewItem lvi in listFiles.Items) {
+				lvi.ImageIndex = 0;
+			}
+			Application.DoEvents();
+			fileListGood = fileListBad = fileListMissing = 0;
+		}
+
+
 		#region Events
 		// Hook into the event processing.
 		private void StartEventProcessing() {
+			this.Activated +=new System.EventHandler(this.FrmMain_Activated);
+			this.Closing +=new CancelEventHandler(this.FrmMain_Closing);
+			listFiles.DragEnter += new DragEventHandler(this.listFiles_DragEnter);
+			listFiles.DragDrop += new DragEventHandler(this.listFiles_DragDrop);
+			mnuFilesIgnoreProcessing.Click += new System.EventHandler(this.mnuFilesIgnoreProcessing_Click);
+			mnuFilesUnIgnoreAll.Click += new System.EventHandler(this.mnuFilesUnIgnoreAll_Click);
+			mnuFilesClearResults.Click += new System.EventHandler(this.mnuFilesClearResults_Click);
 			btnVerify.Click += new System.EventHandler(this.initiateVerify);
 			mnuFileOpen.Click += new System.EventHandler(this.mnuFileOpen_Click);
 			mnuFileVerify.Click += new System.EventHandler(this.initiateVerify);
@@ -174,6 +252,80 @@ namespace Classless.Verifier {
 			mnuHelpAbout.Click += new System.EventHandler(this.mnuHelpAbout_Click);
 		}
 
+		// The window has been activated.
+		private void FrmMain_Activated(object sender, System.EventArgs args) {
+			if (firstLoad) {
+				firstLoad = false;
+				if ((FileList != null) && ((bool)AppConfig.Instance.GetValue("ProcessListOnApplicationLoad", typeof(bool), false))) {
+					initiateVerify(this, args);
+				}
+			}
+		}
+
+		// The user is trying to exit the application.
+		private void FrmMain_Closing(object sender, CancelEventArgs args) {
+			// See if they're trying to abort.
+			if (listProcessorThread != null) {
+				if ((bool)AppConfig.Instance.GetValue("ConfirmApplicationExit", typeof(bool), true)) {
+					if (MessageBox.Show("Stop processing the current list?", "Verify", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.No) {
+
+						// We have to check if it's still processing, in case they took too long with the messagebox.
+						if (listProcessorThread != null) {
+							listProcessorThread.Abort();
+							processorCompletion(sender, new CompletionEventArgs());
+						}
+					} else {
+						args.Cancel = true;
+						return;
+					}
+				} else {
+					listProcessorThread.Abort();
+				}
+			}
+
+			SaveSettings();
+		}
+
+		// User wants to drag and drop a filelist into the application.
+		private void listFiles_DragEnter(object sender, DragEventArgs e) {
+			if (e.Data.GetDataPresent(DataFormats.FileDrop, false) == true) {
+				e.Effect = DragDropEffects.All;
+			}
+		}
+
+		// User has dropped the file into the list.
+		private void listFiles_DragDrop(object sender, DragEventArgs args) {
+			OpenFileList(((string[])args.Data.GetData(DataFormats.FileDrop))[0]);
+		}
+
+		// User wants to toggle the ignore status of some files.
+		private void mnuFilesIgnoreProcessing_Click(object sender, EventArgs args) {
+			foreach (ListViewItem lvi in listFiles.SelectedItems) {
+				if (((FileListFile)lvi.Tag).Ignore) {
+					lvi.ForeColor = Color.FromKnownColor(KnownColor.WindowText);
+					((FileListFile)lvi.Tag).Ignore = false;
+				} else {
+					lvi.ForeColor = Color.FromKnownColor(KnownColor.InactiveCaptionText);
+					((FileListFile)lvi.Tag).Ignore = true;
+				}
+			}
+		}
+
+		// User wants to un-ignore all files.
+		private void mnuFilesUnIgnoreAll_Click(object sender, EventArgs args) {
+			foreach (ListViewItem lvi in listFiles.Items) {
+				if (((FileListFile)lvi.Tag).Ignore) {
+					lvi.ForeColor = Color.FromKnownColor(KnownColor.WindowText);
+					((FileListFile)lvi.Tag).Ignore = false;
+				}
+			}
+		}
+
+		// User wants to clear the result icons.
+		private void mnuFilesClearResults_Click(object sender, EventArgs args) {
+			ClearResults();
+		}
+
 		// User wants to verify the current file list.
 		private void initiateVerify(object sender, System.EventArgs args) {
 			// Make sure there's a list to work with.
@@ -182,14 +334,20 @@ namespace Classless.Verifier {
 				return;
 			}
 
-			// Clear things up in preparation.
-			panelStatus.Text = string.Empty;
-			barStatus.ProgressBar.Value = 0;
-			foreach (ListViewItem lvi in listFiles.Items) {
-				lvi.ImageIndex = 0;
+			// See if they're trying to abort.
+			if (listProcessorThread != null) {
+				if (MessageBox.Show("Stop processing the current list?", "Verify", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No) { return; }
+
+				// We have to check if it's still processing, in case they took too long with the messagebox.
+				if (listProcessorThread != null) {
+					listProcessorThread.Abort();
+					processorCompletion(sender, new CompletionEventArgs());
+				}
+				return;
 			}
-			Application.DoEvents();
-			fileListGood = fileListBad = fileListMissing = 0;
+
+			// Clear things up in preparation.
+			ClearResults();
 
 			// Set up the processor.
 			listProcessor = new FileListProcessor(FileList);
@@ -202,6 +360,7 @@ namespace Classless.Verifier {
 			// Start the processor.
 			listProcessorThread = new Thread(new ThreadStart(listProcessor.Start));
 			listProcessorThread.IsBackground = true;
+			listProcessorThread.Priority = (ThreadPriority)AppConfig.Instance.GetValue("ProcessingThreadPriority", typeof(ThreadPriority), ThreadPriority.Normal);
 			listProcessorThread.Start();
 		}
 
@@ -211,12 +370,12 @@ namespace Classless.Verifier {
 				if (lvi.Tag == args.File) {
 					// Show the status.
 					switch (args.Status) {
-						case FileListProcessorStatus.Good:		lvi.ImageIndex = 1; fileListGood++;	break;
-						case FileListProcessorStatus.Bad:		lvi.ImageIndex = 2; fileListBad++;	break;
-						case FileListProcessorStatus.NotFound:	lvi.ImageIndex = 3; fileListMissing++; break;
-						//case FileListProcessorStatus.Error:		lvi.ImageIndex = 4; fileListBad++;	break;
-						//case FileListProcessorStatus.InProcess:	lvi.ImageIndex = 5; break;
-						case FileListProcessorStatus.WrongSize:	lvi.ImageIndex = 3; fileListBad++;	break;
+						case FileListProcessorStatus.Good: lvi.ImageIndex = 1; fileListGood++; break;
+						case FileListProcessorStatus.Bad: lvi.ImageIndex = 2; fileListBad++; break;
+						case FileListProcessorStatus.NotFound: lvi.ImageIndex = 3; fileListMissing++; break;
+						case FileListProcessorStatus.Error: lvi.ImageIndex = 2; fileListBad++; break;
+						case FileListProcessorStatus.InProcess: lvi.ImageIndex = 4; break;
+						case FileListProcessorStatus.WrongSize: lvi.ImageIndex = 2; fileListBad++; break;
 					}
 
 					// Scroll if needed.
@@ -238,10 +397,19 @@ namespace Classless.Verifier {
 		// The FileListProcessor completed.
 		private void processorCompletion(object sender, CompletionEventArgs args) {
 			listProcessor = null;
+			listProcessorThread = null;
 
 			// Open the GUI.
 			UnlockGUI();
 			barStatus.ProgressBar.Value = 0;
+
+			// Clear out the icon of the file that was marked as in-process.
+			for (int i = 0; i < listFiles.Items.Count; i++) {
+				if (listFiles.Items[i].ImageIndex == 4) {
+					listFiles.Items[i].ImageIndex = 0;
+					break;
+				}
+			}
 
 			// If there's an error, show it to the user.
 			if (args.Exception != null) {
@@ -257,23 +425,7 @@ namespace Classless.Verifier {
 			DialogResult dr = dialogOpen.ShowDialog(this);
 
 			if (dr == DialogResult.OK) {
-				string temp = dialogOpen.FileName;
-
-				try {
-					FileList = new FileList(temp);
-				} catch (FileTypeException) {
-					// Unknown format.
-					MessageBox.Show(temp + " does not contain a supported file verification list format.",
-						"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				} catch (Exception ex) {
-					// Bad error.
-					MessageBox.Show("Could not open file verification list:" +
-						Environment.NewLine + Environment.NewLine +
-						temp +
-						Environment.NewLine + Environment.NewLine +
-						ex.Message,
-						"Verify", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				}
+				OpenFileList(dialogOpen.FileName);
 			}
 		}
 
@@ -345,6 +497,11 @@ namespace Classless.Verifier {
 			this.colFilesHash = new System.Windows.Forms.ColumnHeader();
 			this.ilFileIcons = new System.Windows.Forms.ImageList(this.components);
 			this.btnVerify = new System.Windows.Forms.Button();
+			this.mnuFiles = new System.Windows.Forms.ContextMenu();
+			this.mnuFilesIgnoreProcessing = new System.Windows.Forms.MenuItem();
+			this.menuItem2 = new System.Windows.Forms.MenuItem();
+			this.mnuFilesClearResults = new System.Windows.Forms.MenuItem();
+			this.mnuFilesUnIgnoreAll = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.panelStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.panelProgress)).BeginInit();
 			this.SuspendLayout();
@@ -479,6 +636,7 @@ namespace Classless.Verifier {
 																						this.colFilesFile,
 																						this.colFilesType,
 																						this.colFilesHash});
+			this.listFiles.ContextMenu = this.mnuFiles;
 			this.listFiles.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.listFiles.FullRowSelect = true;
 			this.listFiles.GridLines = true;
@@ -518,6 +676,34 @@ namespace Classless.Verifier {
 			this.btnVerify.Size = new System.Drawing.Size(552, 23);
 			this.btnVerify.TabIndex = 2;
 			this.btnVerify.Text = "&Verify Files";
+			// 
+			// mnuFiles
+			// 
+			this.mnuFiles.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
+																					 this.mnuFilesIgnoreProcessing,
+																					 this.menuItem2,
+																					 this.mnuFilesUnIgnoreAll,
+																					 this.mnuFilesClearResults});
+			// 
+			// mnuFilesIgnoreProcessing
+			// 
+			this.mnuFilesIgnoreProcessing.Index = 0;
+			this.mnuFilesIgnoreProcessing.Text = "Ignore Processing (Toggle)";
+			// 
+			// menuItem2
+			// 
+			this.menuItem2.Index = 1;
+			this.menuItem2.Text = "-";
+			// 
+			// mnuFilesClearResults
+			// 
+			this.mnuFilesClearResults.Index = 3;
+			this.mnuFilesClearResults.Text = "Clear Results";
+			// 
+			// mnuFilesUnIgnoreAll
+			// 
+			this.mnuFilesUnIgnoreAll.Index = 2;
+			this.mnuFilesUnIgnoreAll.Text = "Un-Ignore All";
 			// 
 			// FrmMain
 			// 

@@ -27,7 +27,6 @@
 #endregion
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("Verifier")]
 [assembly: AssemblyDescription("A File Verification Utility")]
@@ -35,10 +34,12 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCompany("Classless.net")]
 [assembly: AssemblyProduct("Verifier")]
 [assembly: AssemblyCopyright("(c)2004 Classless.net")]
-[assembly: AssemblyTrademark("")]
+[assembly: AssemblyTrademark("(c)2004 Classless.net")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.1.*")]
+[assembly: AssemblyVersion("0.2.*")]
 
+#if STRONGNAME
 [assembly: AssemblyDelaySign(false)]
 [assembly: AssemblyKeyFile(@"..\..\..\Classless.Verifier.snk")]
+#endif

@@ -65,7 +65,7 @@ namespace Classless.Verifier {
 			description = (AssemblyDescriptionAttribute)AssemblyDescriptionAttribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyDescriptionAttribute));
 			lblVerifierDescription.Text = description.Description;
 			lblVerifierCopyright.Text = "Copyright " + copyright.Copyright;
-			lblVerifierNameVersion.Text = Verifier.GetFullTitle();
+			lblVerifierNameVersion.Text = Verifier.GetFullTitle(true);
 
 			// Display the Classless.Hasher information.
 			version = Assembly.GetAssembly(typeof(Classless.Hasher.MD5)).GetName().Version;

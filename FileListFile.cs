@@ -64,6 +64,10 @@ namespace Classless.Verifier {
 		[XmlIgnoreAttribute()]
 		public bool modifiedSpecified;
 
+		/// <summary>Whether or not this file should be ignored during processing.</summary>
+		[XmlIgnoreAttribute()]
+		public bool Ignore;
+
 		/// <summary>The hash/checksum.</summary>
 		[XmlTextAttribute()]
 		public string Value;
@@ -85,6 +89,7 @@ namespace Classless.Verifier {
 			this.sizeSpecified = false;
 			this.createdSpecified = false;
 			this.modifiedSpecified = false;
+			this.Ignore = false;
 		}
 	}
 }

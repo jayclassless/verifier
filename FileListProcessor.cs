@@ -85,6 +85,12 @@ namespace Classless.Verifier {
 			System.Security.Cryptography.HashAlgorithm hasher;
 			try {
 				foreach(FileListFile f in fileList.filelist) {
+					// See if we're supposed to ignore this file.
+					if (f.Ignore) {
+						numFilesProcessed++;
+						continue;
+					}
+
 					// Announce that we're starting on this file.
 					OnProgress(f, FileListProcessorStatus.InProcess, 0, CalculatePercentage(0));
 					currentFile = f;
@@ -96,20 +102,20 @@ namespace Classless.Verifier {
 
 						// If the file isn't the same size, it shouldn't be considered valid.
 						if ((currentFile.sizeSpecified) && (currentFile.size != (ulong)fs.Length)) {
-							numFilesProcessed++;
 							OnProgress(f, FileListProcessorStatus.WrongSize, 100, CalculatePercentage(100));
+							numFilesProcessed++;
 							continue;
 						}
 
 						fs.ProgressUpdate += new ProgressStream.ProgressUpdateEventHandler(this.fs_ProgressUpdate);
 					} catch (FileNotFoundException) {
-						numFilesProcessed++;
 						OnProgress(f, FileListProcessorStatus.NotFound, 100, CalculatePercentage(100));
+						numFilesProcessed++;
 						continue;
 					} catch (Exception ex) {
 						if (ex is ThreadAbortException) { throw; }
-						numFilesProcessed++;
 						OnProgress(f, FileListProcessorStatus.Error, 100, CalculatePercentage(100));
+						numFilesProcessed++;
 						continue;
 					}
 
@@ -119,8 +125,8 @@ namespace Classless.Verifier {
 						hash = Classless.Hasher.Utilities.ByteToHexadecimal(hasher.ComputeHash(fs)).ToUpper(System.Globalization.CultureInfo.InvariantCulture);
 					} catch (Exception ex) {
 						if (ex is ThreadAbortException) { throw; }
-						numFilesProcessed++;
 						OnProgress(f, FileListProcessorStatus.Error, 100, CalculatePercentage(100));
+						numFilesProcessed++;
 						continue;
 					} finally {
 						fs.Close();

@@ -63,73 +63,13 @@ namespace Classless.Verifier {
 		/// <summary>Initializes an instances of FileList.</summary>
 		/// <param name="filename">The file verification list to build the FileList from.</param>
 		public FileList(string filename) {
-			string extension = Path.GetExtension(filename).ToLower(System.Globalization.CultureInfo.InvariantCulture);
-
-			// Open the file.
-			StreamReader reader = new StreamReader(filename);
-
-			// Figure out what type of file it is.
-			if ((extension == ".verify") || (extension == ".vfy")) {
-				try {
-					// Deserialize the XML.
-					XmlSerializer serializer = new XmlSerializer(typeof(FileList));
-					FileList temp = (FileList)serializer.Deserialize(reader);
-
-					// Copy it into this object.
-					this.filelist = temp.filelist;
-					this.information = temp.information;
-					this.type = FileListType.VERIFY;
-					this.version = temp.version;
-				} catch {
-					try { reader.Close(); } catch {}
-					throw;
-				}
-			} else {
-				switch (extension) {
-					case ".sfv":	this.type = FileListType.SFV;		break;
-					case ".md5":	this.type = FileListType.MD5;		break;
-					case ".md5sum":	this.type = FileListType.MD5SUM;	break;
-					default:
-						try { reader.Close(); } catch {}
-						throw new FileTypeException();
-				}
-
-				// Read it in.
-				string line;
-				Match m;
-				while ((line = reader.ReadLine()) != null) {
-					line = line.Trim();
-
-					switch (this.type) {
-						case FileListType.SFV:
-							// Format:   filename.ext ABCD1234
-							m = Regex.Match(line, @"^(?<Name>[^;].+) (?<Checksum>[0-9a-fA-F]{8})$");
-							if (m.Success) {
-								filelist.Add(new FileListFile(m.Groups["Name"].Value.Trim(), m.Groups["Checksum"].Value.Trim(), AlgorithmType.CRC32REVERSED));
-							}
-							break;
-
-						case FileListType.MD5:
-							// Format:   MD5 (filename.ext) = 0123456789ABCDEF0123456789ABCDEF
-							m = Regex.Match(line, @"^MD5 \((?<Name>.+)\) = (?<Checksum>[0-9a-fA-F]{32})$");
-							if (m.Success) {
-								filelist.Add(new FileListFile(m.Groups["Name"].Value.Trim(), m.Groups["Checksum"].Value.Trim(), AlgorithmType.MD5));
-							}
-							break;
-
-						case FileListType.MD5SUM:
-							// Format:   0123456789ABCDEF0123456789ABCDEF filename.ext
-							m = Regex.Match(line, @"^(?<Checksum>[0-9a-fA-F]{32})\s+(?<Name>.+)$");
-							if (m.Success) {
-								filelist.Add(new FileListFile(m.Groups["Name"].Value.Trim(), m.Groups["Checksum"].Value.Trim(), AlgorithmType.MD5));
-							}
-							break;
-					}
-				}
-			}
-
-			this.sourceFile = filename;
-			reader.Close();
+			FileListReader reader = FileListReader.GetReader(Path.GetExtension(filename));
+			reader.Read(filename);
+			this.filelist = reader.FileList.filelist;
+			this.information = reader.FileList.information;
+			this.sourceFile = reader.FileList.sourceFile;
+			this.type = reader.FileList.type;
+			this.version = reader.FileList.version;
 		}
 	}
 }
