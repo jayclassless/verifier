@@ -34,6 +34,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
 using System.Threading;
+using AMS.Profile;
 
 namespace Classless.Verifier {
 	/// <summary>The main window of the application.</summary>
@@ -80,6 +81,9 @@ namespace Classless.Verifier {
 		// The currently open file list.
 		private FileList fileList;
 
+		// The current program options.
+		private Config cfg;
+
 		// Tallies of the file list's processing.
 		private int fileListGood;
 		private int fileListBad;
@@ -91,6 +95,7 @@ namespace Classless.Verifier {
 
 		// File list processor objects.
 		private FileListProcessor listProcessor;
+		private System.Windows.Forms.MenuItem mnuToolsOptions;
 		private Thread listProcessorThread;
 
 
@@ -127,6 +132,7 @@ namespace Classless.Verifier {
 		public FrmMain() {
 			// Initialize some variables.
 			firstLoad = true;
+			cfg = new Config();
 
 			// Build the form.
 			InitializeComponent();
@@ -134,25 +140,25 @@ namespace Classless.Verifier {
 
 			// Establish last window settings.
 			this.Size = new Size(
-				(int)AppConfig.Instance.GetValue("MainWindowSizeWidth", typeof(int), this.Size.Width),
-				(int)AppConfig.Instance.GetValue("MainWindowSizeHeight", typeof(int), this.Size.Height)
+				cfg.GetValue("MainWindow", "Width", this.Size.Width),
+				cfg.GetValue("MainWindow", "Height", this.Size.Height)
 			);
 			this.Location = new Point(
-				(int)AppConfig.Instance.GetValue("MainWindowLocationX", typeof(int), ((Screen.PrimaryScreen.Bounds.Width - this.Size.Width) / 2)),
-				(int)AppConfig.Instance.GetValue("MainWindowLocationY", typeof(int), ((Screen.PrimaryScreen.Bounds.Height - this.Size.Height) / 2))
+				cfg.GetValue("MainWindow", "X", ((Screen.PrimaryScreen.Bounds.Width - this.Size.Width) / 2)),
+				cfg.GetValue("MainWindow", "Y", ((Screen.PrimaryScreen.Bounds.Height - this.Size.Height) / 2))
 			);
-			this.colFilesFile.Width = (int)AppConfig.Instance.GetValue("MainListFileWidth", typeof(int), this.colFilesFile.Width);
-			this.colFilesType.Width = (int)AppConfig.Instance.GetValue("MainListTypeWidth", typeof(int), this.colFilesType.Width);
-			this.colFilesHash.Width = (int)AppConfig.Instance.GetValue("MainListHashWidth", typeof(int), this.colFilesHash.Width);
+			this.colFilesFile.Width = cfg.GetValue("MainWindow", "ListFileWidth", this.colFilesFile.Width);
+			this.colFilesType.Width = cfg.GetValue("MainWindow", "ListTypeWidth", this.colFilesType.Width);
+			this.colFilesHash.Width = cfg.GetValue("MainWindow", "ListHashWidth", this.colFilesHash.Width);
 
 			// Establish last window settings for the log.
-			FrmLog.Instance.Size = new Size( 
-				(int)AppConfig.Instance.GetValue("LogWindowSizeWidth", typeof(int), FrmLog.Instance.Size.Width),
-				(int)AppConfig.Instance.GetValue("LogWindowSizeHeight", typeof(int), FrmLog.Instance.Size.Height)
+			FrmLog.Instance.Size = new Size(
+				cfg.GetValue("LogWindow", "Width", FrmLog.Instance.Size.Width),
+				cfg.GetValue("LogWindow", "Height", FrmLog.Instance.Size.Height)
 			);
 			FrmLog.Instance.Location = new Point(
-				(int)AppConfig.Instance.GetValue("LogWindowLocationX", typeof(int), 0),
-				(int)AppConfig.Instance.GetValue("LogWindowLocationY", typeof(int), 0)
+				cfg.GetValue("LogWindow", "X", 0),
+				cfg.GetValue("LogWindow", "Y", 0)
 			);
 		}
 
@@ -199,38 +205,28 @@ namespace Classless.Verifier {
 
 		// Save information about the windows' size, etc.
 		private void SaveSettings() {
-			if ((bool)AppConfig.Instance.GetValue("RememberWindowSettings", typeof(bool), true)) {
-				// Only do this if we're not maximized or minimized.
+			if (cfg.GetValue("Program", "RememberWindowSettings", true)) {
+				// Main window.
 				if (this.WindowState == FormWindowState.Normal) {
-					AppConfig.Instance.SetValue("MainWindowSizeWidth", this.Size.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainWindowSizeHeight", this.Size.Height.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainWindowLocationX", this.Location.X.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainWindowLocationY", this.Location.Y.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainListFileWidth", this.colFilesFile.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainListTypeWidth", this.colFilesType.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-					AppConfig.Instance.SetValue("MainListHashWidth", this.colFilesHash.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+					cfg.SetValue("MainWindow", "Width", this.Size.Width);
+					cfg.SetValue("MainWindow", "Height", this.Size.Height);
+					cfg.SetValue("MainWindow", "X", this.Location.X);
+					cfg.SetValue("MainWindow", "Y", this.Location.Y);
+					cfg.SetValue("MainWindow", "ListFileWidth", this.colFilesFile.Width);
+					cfg.SetValue("MainWindow", "ListTypeWidth", this.colFilesType.Width);
+					cfg.SetValue("MainWindow", "ListHashWidth", this.colFilesHash.Width);
 				}
 
 				// Log window.
-				AppConfig.Instance.SetValue("LogWindowSizeWidth", FrmLog.Instance.Size.Width.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-				AppConfig.Instance.SetValue("LogWindowSizeHeight", FrmLog.Instance.Size.Height.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-				AppConfig.Instance.SetValue("LogWindowLocationX", FrmLog.Instance.Location.X.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
-				AppConfig.Instance.SetValue("LogWindowLocationY", FrmLog.Instance.Location.Y.ToString(System.Globalization.CultureInfo.InvariantCulture.NumberFormat));
+				if (FrmLog.Instance.WindowState == FormWindowState.Normal) {
+					cfg.SetValue("LogWindow", "Width", FrmLog.Instance.Size.Width);
+					cfg.SetValue("LogWindow", "Height", FrmLog.Instance.Size.Height);
+					cfg.SetValue("LogWindow", "X", FrmLog.Instance.Location.X);
+					cfg.SetValue("LogWindow", "Y", FrmLog.Instance.Location.Y);
+				}
 			} else {
-				// Main window.
-				AppConfig.Instance.RemoveElement("MainWindowSizeWidth");
-				AppConfig.Instance.RemoveElement("MainWindowSizeHeight");
-				AppConfig.Instance.RemoveElement("MainWindowLocationX");
-				AppConfig.Instance.RemoveElement("MainWindowLocationY");
-				AppConfig.Instance.RemoveElement("MainListFileWidth");
-				AppConfig.Instance.RemoveElement("MainListTypeWidth");
-				AppConfig.Instance.RemoveElement("MainListHashWidth");
-
-				// Log window.
-				AppConfig.Instance.RemoveElement("LogWindowSizeWidth");
-				AppConfig.Instance.RemoveElement("LogWindowSizeHeight");
-				AppConfig.Instance.RemoveElement("LogWindowLocationX");
-				AppConfig.Instance.RemoveElement("LogWindowLocationY");
+				cfg.RemoveSection("MainWindow");
+				cfg.RemoveSection("LogWindow");
 			}
 		}
 
@@ -240,9 +236,19 @@ namespace Classless.Verifier {
 			try {
 				FileList = new FileList(filename);
 			} catch (FileTypeException) {
-				// Unknown format.
-				MessageBox.Show(filename + " is not a supported file verification list format.",
-					"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				// Couldn't figure it out, ask the user what they want to do.
+				FrmChooseType fct = new FrmChooseType();
+				if (fct.ShowDialog(this) == DialogResult.Cancel) { return; }
+
+				try {
+					FileList = new FileList(filename, fct.FileListType);
+				} catch (FileTypeException) {
+					// Unknown format.
+					MessageBox.Show(filename + " is not a supported file verification list format.",
+						"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				} catch (Exception ex) {
+					throw ex;
+				}
 			} catch (Exception ex) {
 				// Bad error.
 				MessageBox.Show("Could not open file verification list:" +
@@ -251,6 +257,13 @@ namespace Classless.Verifier {
 					Environment.NewLine + Environment.NewLine +
 					ex.Message,
 					"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+
+			// In case nothing shows up, let the user know that we tried, but didn't find anything.
+			if (FileList.filelist.Count == 0) {
+				MessageBox.Show("Could not find any entries in " +
+					filename,
+					"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 			}
 		}
 
@@ -284,6 +297,7 @@ namespace Classless.Verifier {
 			mnuFileViewLog.Click += new System.EventHandler(this.mnuFileViewLog_Click);
 			mnuFileExit.Click += new System.EventHandler(this.mnuFileExit_Click);
 			mnuToolsCalculator.Click += new System.EventHandler(this.mnuToolsCalculator_Click);
+			mnuToolsOptions.Click += new System.EventHandler(this.mnuToolsOptions_Click);
 			mnuHelpHomePage.Click += new System.EventHandler(this.mnuHelpHomePage_Click);
 			mnuHelpXMLHomePage.Click += new System.EventHandler(this.mnuHelpXMLHomePage_Click);
 			mnuHelpClassless.Click += new System.EventHandler(this.mnuHelpClassless_Click);
@@ -295,7 +309,7 @@ namespace Classless.Verifier {
 		private void FrmMain_Activated(object sender, System.EventArgs args) {
 			if (firstLoad) {
 				firstLoad = false;
-				if ((FileList != null) && ((bool)AppConfig.Instance.GetValue("ProcessListOnApplicationLoad", typeof(bool), false))) {
+				if ((FileList != null) && (cfg.GetValue("Program", "ProcessListOnApplicationLoad", true))) {
 					initiateVerify(this, args);
 				}
 			}
@@ -305,7 +319,7 @@ namespace Classless.Verifier {
 		private void FrmMain_Closing(object sender, CancelEventArgs args) {
 			// See if they're trying to abort.
 			if (listProcessorThread != null) {
-				if ((bool)AppConfig.Instance.GetValue("ConfirmApplicationExit", typeof(bool), true)) {
+				if (cfg.GetValue("Program", "ConfirmApplicationExit", true)) {
 					if (MessageBox.Show("Stop processing the current list?", "Verify", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.No) {
 
 						// We have to check if it's still processing, in case they took too long with the messagebox.
@@ -405,7 +419,7 @@ namespace Classless.Verifier {
 			// Start the processor.
 			listProcessorThread = new Thread(new ThreadStart(listProcessor.Start));
 			listProcessorThread.IsBackground = true;
-			listProcessorThread.Priority = (ThreadPriority)AppConfig.Instance.GetValue("ProcessingThreadPriority", typeof(ThreadPriority), ThreadPriority.Normal);
+			listProcessorThread.Priority = (ThreadPriority)Enum.Parse(typeof(ThreadPriority), cfg.GetValue("Program", "ProcessingThreadPriority", "Normal"));
 			listProcessorThread.Start();
 		}
 
@@ -482,7 +496,7 @@ namespace Classless.Verifier {
 			FrmLog.Instance.AddLine("       Finished: " + DateTime.Now.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'sszzz"));
 
 			// Save the log.
-			if ((bool)AppConfig.Instance.GetValue("AutomaticallySaveLog", typeof(bool), false)) {
+			if (cfg.GetValue("Program", "AutomaticallySaveLog", false)) {
 				FrmLog.Instance.Save(Path.ChangeExtension(FileList.sourceFile, ".log"));
 			}
 		}
@@ -511,6 +525,12 @@ namespace Classless.Verifier {
 		private void mnuToolsCalculator_Click(object sender, System.EventArgs args) {
 			FrmCalculator fc = new FrmCalculator();
 			fc.Show();
+		}
+
+		// User wants manage the program options.
+		private void mnuToolsOptions_Click(object sender, System.EventArgs args) {
+			FrmOptions fo = new FrmOptions();
+			fo.ShowDialog(this);
 		}
 
 		// User wants to view the Verifier home page.
@@ -566,6 +586,7 @@ namespace Classless.Verifier {
 			this.mnuHelpXMLHomePage = new System.Windows.Forms.MenuItem();
 			this.mnuHelpClassless = new System.Windows.Forms.MenuItem();
 			this.menuItem5 = new System.Windows.Forms.MenuItem();
+			this.mnuHelpMPL = new System.Windows.Forms.MenuItem();
 			this.mnuHelpAbout = new System.Windows.Forms.MenuItem();
 			this.barStatus = new Classless.Verifier.ProgressStatusBar();
 			this.panelStatus = new System.Windows.Forms.StatusBarPanel();
@@ -582,7 +603,7 @@ namespace Classless.Verifier {
 			this.mnuFilesClearResults = new System.Windows.Forms.MenuItem();
 			this.ilFileIcons = new System.Windows.Forms.ImageList(this.components);
 			this.btnVerify = new System.Windows.Forms.Button();
-			this.mnuHelpMPL = new System.Windows.Forms.MenuItem();
+			this.mnuToolsOptions = new System.Windows.Forms.MenuItem();
 			((System.ComponentModel.ISupportInitialize)(this.panelStatus)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.panelProgress)).BeginInit();
 			this.SuspendLayout();
@@ -645,7 +666,8 @@ namespace Classless.Verifier {
 			this.mnuTools.Index = 1;
 			this.mnuTools.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																					 this.mnuToolsCalculator,
-																					 this.mnuToolsCreateFileList});
+																					 this.mnuToolsCreateFileList,
+																					 this.mnuToolsOptions});
 			this.mnuTools.Text = "&Tools";
 			// 
 			// mnuToolsCalculator
@@ -691,6 +713,11 @@ namespace Classless.Verifier {
 			this.menuItem5.Index = 3;
 			this.menuItem5.Text = "-";
 			// 
+			// mnuHelpMPL
+			// 
+			this.mnuHelpMPL.Index = 4;
+			this.mnuHelpMPL.Text = "&Mozilla Public License";
+			// 
 			// mnuHelpAbout
 			// 
 			this.mnuHelpAbout.Index = 5;
@@ -723,7 +750,7 @@ namespace Classless.Verifier {
 			// 
 			this.dialogOpen.Filter = "All Supported (*.verify;*.vfy;*.sfv;*.md5;*.md5sum)|*.verify;*.vfy;*.sfv;*.md5;*." +
 				"md5sum|VerifyXML File (*.verify;*.vfy)|*.verify;*.vfy|SFV File (*.sfv)|*.sfv|MD5" +
-				" Checksums (*.md5;*.md5sum)|*.md5;*.md5sum";
+				" Checksums (*.md5;*.md5sum)|*.md5;*.md5sum|All Files (*.*)|*.*";
 			this.dialogOpen.Title = "Open File Verification List";
 			// 
 			// listFiles
@@ -802,10 +829,10 @@ namespace Classless.Verifier {
 			this.btnVerify.TabIndex = 2;
 			this.btnVerify.Text = "&Verify Files";
 			// 
-			// mnuHelpMPL
+			// mnuToolsOptions
 			// 
-			this.mnuHelpMPL.Index = 4;
-			this.mnuHelpMPL.Text = "&Mozilla Public License";
+			this.mnuToolsOptions.Index = 2;
+			this.mnuToolsOptions.Text = "&Options";
 			// 
 			// FrmMain
 			// 

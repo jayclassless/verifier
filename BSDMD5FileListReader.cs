@@ -31,22 +31,33 @@ using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Classless.Verifier {
-	/// <summary>A class that reads in MD5 files.</summary>
-	public class MD5FileListReader : FileListReader {
+	/// <summary>A class that reads in BSD MD5 files.</summary>
+	public class BSDMD5FileListReader : FileListReader {
 		/// <summary>Read in a file list.</summary>
 		/// <param name="filename">The file list to read in.</param>
 		override public void Read(string filename) {
-			FileListReader reader = new MD5SumFileListReader();
-			reader.Read(filename);
+			// Open the file.
+			StreamReader reader = new StreamReader(filename);
 
-			// If the reader didn't get anything, it may actually be the other type of MD5.
-			if (reader.FileList.filelist.Count == 0) {
-				reader = new BSDMD5FileListReader();
-				reader.Read(filename);
+			FileList = new FileList();
+			string line;
+			Match m;
+
+			// Read in the files.
+			while ((line = reader.ReadLine()) != null) {
+				line = line.Trim();
+
+				// Format:   MD5 (filename.ext) = 0123456789ABCDEF0123456789ABCDEF
+				m = Regex.Match(line, @"^MD5 \((?<Name>.+)\) = (?<Checksum>[0-9a-fA-F]{32})$");
+				if (m.Success) {
+					FileList.filelist.Add(new FileListFile(m.Groups["Name"].Value.Trim(), m.Groups["Checksum"].Value.Trim(), AlgorithmType.MD5));
+				}
 			}
 
 			// Finish up.
-			FileList = reader.FileList;
+			FileList.sourceFile = filename;
+			FileList.type = FileListType.BSDMD5;
+			reader.Close();
 		}
 	}
 }

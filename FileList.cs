@@ -56,14 +56,28 @@ namespace Classless.Verifier {
 		public ArrayList filelist = new ArrayList();
 
 
-		/// <summary>Initializes an instances of FileList.</summary>
+		/// <summary>Initializes a new instance of FileList.</summary>
 		/// <remarks>This default constructor exists for serialization's sake.</remarks>
 		public FileList() {}
 
-		/// <summary>Initializes an instances of FileList.</summary>
+		/// <summary>Initializes a new instance of FileList.</summary>
 		/// <param name="filename">The file verification list to build the FileList from.</param>
 		public FileList(string filename) {
-			FileListReader reader = FileListReader.GetReader(Path.GetExtension(filename));
+			Read(filename, FileListReader.GetReader(Path.GetExtension(filename)));
+		}
+
+		/// <summary>Initializes a new instance of FileList.</summary>
+		/// <param name="filename">The file verification list to build the FileList from.</param>
+		/// <param name="type">The specific file verification list format to try to parse.</param>
+		public FileList(string filename, FileListType type) {
+			Read(filename, FileListReader.GetReader(type));
+		}
+
+
+		/// <summary>Reads the file verification list into this object.</summary>
+		/// <param name="filename">The file verification list to build the FileList from.</param>
+		/// <param name="reader">The FileListReader to use.</param>
+		private void Read(string filename, FileListReader reader) {
 			reader.Read(filename);
 			this.filelist = reader.FileList.filelist;
 			this.information = reader.FileList.information;

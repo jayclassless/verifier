@@ -1,7 +1,7 @@
 <VisualStudioProject>
     <CSHARP LastOpenVersion = "7.10.3077" >
         <Build>
-            <Settings ReferencePath = "D:\Classless\Verifier\;" >
+            <Settings ReferencePath = "D:\Classless\Verifier\;D:\Classless\verifier\Libraries\net-1.1\;C:\_Playground\Classless\verifier\Libraries\net-1.1\" >
                 <Config
                     Name = "Debug"
                     EnableASPDebugging = "false"

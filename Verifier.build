@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<project name="Verifier" default="build" basedir=".">
+	<description>A File Verification Utility.</description>
+
+	<!-- Project properties. -->
+	<property name="project.version" value="0.3" />
+	<property name="project.icon" value="${nant.project.basedir}/Images/verifier.ico" />
+
+
+	<!-- Build properties. -->
+	<property name="build.config" value="release" />
+	<property name="build.defines" value="" />
+
+
+	<!-- Build configurations. -->
+	<target name="release" description="Perform a 'release' build.">
+		<echo message="Preparing for a Release build." />
+		<property name="build.config" value="release" />
+		<property name="build.debug" value="false" />
+		<property name="build.warnaserror" value="true" />
+		<property name="build.optimize" value="true" />
+		<property name="build.dir" value="${nant.project.basedir}/build/${nant.platform.name}/${nant.settings.currentframework}/${project.version}/${build.config}" />
+	</target>
+	<target name="debug" description="Perform a 'debug' build.">
+		<echo message="Preparing for a Debug build." />
+		<property name="build.config" value="debug" />
+		<property name="build.debug" value="true" />
+		<property name="build.warnaserror" value="false" />
+		<property name="build.optimize" value="false" />
+		<property name="build.defines" value="${build.defines},DEBUG" />
+		<property name="build.dir" value="${nant.project.basedir}/build/${nant.platform.name}/${nant.settings.currentframework}/${project.version}/${build.config}" />
+	</target>
+
+
+	<!-- Cleaning targets. -->
+	<target name="clean" depends="init" description="Remove generated files.">
+		<echo message="Cleaning out previous build." />
+		<delete dir="${build.dir}" failonerror="false" />
+	</target>
+	<target name="cleanall" description="Remove all generated files.">
+		<echo message="Cleaning out all previous builds." />
+		<delete dir="${nant.project.basedir}/build" failonerror="false" />
+	</target>
+
+
+	<!-- Establish prerequisits. -->
+	<target name="init" description="Initializes build properties.">
+		<echo message="Initializing build." />
+		<ifnot test="${property::exists('build.framework')}">
+			<property name="build.framework" value="${nant.settings.currentframework}" />
+		</ifnot>
+		<call target="set-framework-${build.framework}" />
+		<call target="${build.config}" />
+
+		<if test="${property::exists('strongname')}">
+			<property name="build.defines" value="${build.defines},STRONGNAME" />
+		</if>
+	</target>
+
+
+	<!-- The main build target. -->
+	<target name="build" depends="init" description="Compiles the program.">
+		<echo message="Building a ${build.config} configuration for ${nant.settings.currentframework.description} (${nant.settings.currentframework})." />
+
+		<mkdir dir="${build.dir}" />
+		<csc
+			target="winexe"
+			output="${build.dir}/${nant.project.name}.exe"
+			debug="${build.debug}"
+			warnaserror="${build.warnaserror}"
+			define="${build.defines}"
+			optimize="${build.optimize}"
+			win32icon="${project.icon}"
+			>
+
+			<resources>
+				<include name="${nant.project.basedir}/*.resx" />
+			</resources>
+			<references>
+				<include name="${build.libdir}/*" />
+			</references>
+			<sources>
+				<include name="${nant.project.basedir}/*.cs" />
+				<include name="${nant.project.basedir}/Profile/*.cs" />
+				<include name="${nant.project.basedir}/Misc/*.cs" />
+			</sources>
+		</csc>
+
+		<echo message="Copying supporting files." />
+		<copy todir="${build.dir}">
+			<fileset basedir="${build.libdir}">
+				<include name="Classless.Hasher.dll" />
+			</fileset>
+		</copy>
+		<copy file="${nant.project.basedir}/app.config" tofile="${build.dir}/${nant.project.name}.exe.config" /> 
+	</target>
+
+
+	<!-- The distribution packages. -->
+	<target name="dist" depends="init" description="Builds the distribution package.">
+		<echo message="Copying documentation." />
+		<copy todir="${build.dir}">
+			<fileset basedir="${nant.project.basedir}/Documentation">
+				<include name="*" />
+			</fileset>
+		</copy>
+
+		<echo message="Zipping files." />
+		<zip zipfile="${build.dir}/${nant.project.name}.${project.version}.zip" ziplevel="9">
+			<fileset basedir="${build.dir}">
+				<include name="*" />
+				<exclude name="${build.doc}" />
+			</fileset>
+		</zip>
+	</target>
+	<target name="distsrc" description="Builds the source distribution package.">
+		<echo message="Zipping source files." />
+		<zip zipfile="${nant.project.basedir}/${nant.project.name}.${project.version}-src.zip" ziplevel="9">
+			<fileset basedir="${nant.project.basedir}">
+				<include name="*" />
+				<excludefile name=".cvsignore" />
+			</fileset>
+		</zip>
+	</target>
+
+
+	<!-- Supported frameworks. -->
+	<target name="set-framework-net-1.0" description="Microsoft .NET Framework v1.0">
+		<property name="build.defines" value="${build.defines},NET,NET_1_0" />
+		<property name="nant.settings.currentframework" value="net-1.0" />
+		<property name="build.libdir" value="${nant.project.basedir}/Libraries/${nant.settings.currentframework}" />
+	</target>
+	<target name="set-framework-net-1.1" description="Microsoft .NET Framework v1.1">
+		<property name="build.defines" value="${build.defines},NET,NET_1_1" />
+		<property name="nant.settings.currentframework" value="net-1.1" />
+		<property name="build.libdir" value="${nant.project.basedir}/Libraries/${nant.settings.currentframework}" />
+	</target>
+	<target name="set-framework-net-2.0" description="Microsoft .NET Framework v2.0">
+		<echo level="Warning" message="Verifier has not been tested under .NET v2.0 -- continue at your own risk." />
+		<property name="build.defines" value="${build.defines},NET,NET_2_0" />
+		<property name="nant.settings.currentframework" value="net-2.0" />
+		<property name="build.libdir" value="${nant.project.basedir}/Libraries/net-1.1" />
+	</target>
+	<target name="set-framework-mono-1.0" description="Mono v1.0">
+		<fail message="Mono is not currently supported because its System.Windows.Forms implementation is not complete." />
+		<!--
+		<property name="build.defines" value="${build.defines},MONO,MONO_1_0" />
+		<property name="nant.settings.currentframework" value="mono-1.0" />
+		<property name="build.libdir" value="${nant.project.basedir}/Libraries/${nant.settings.currentframework}" />
+		-->
+	</target>
+	<target name="set-framework-sscli-1.0" description="Microsoft Shared Source CLI 1.0">
+		<fail message="SSCLI is not currently supported because Classless.Hasher does not support SSCLI." />
+	</target>
+</project>

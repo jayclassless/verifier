@@ -16,6 +16,17 @@ Legend: + Added Feature or Functionality
         ! Information About Release
 
 
+Version 0.3 (xx/xx/2004)
+-----------------------
+   [+] NAnt build script added to project.
+   [*] Opening MD5 filelists now has more success. It does not base its identification on file extensions anymore. It will try the more popular format first, and if it doesn't find anything, it will try the other format. (Bug #1022000)
+   [+] You can now open filelists with any file extension, and Verifier will ask you what kind of file it is.
+   [+] A warning is shown if Verifier could not find any entries in the file list.
+   [+] An Options screen is now available (Tools->Options).
+   [*] Class for managing application settings replaced by a piece of AMS.Profile (http://www.codeproject.com/csharp/ReadWriteXmlIni.asp).
+   [+] File associations can be set and unset in the Options. (Thanks to http://www.mentalis.org/soft/class.qpx?id=5)
+
+
 Version 0.2 (7/5/2004)
 -----------------------
    [+] Filelists loaded on startup are now optionally processed automatically.

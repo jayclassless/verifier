@@ -38,7 +38,7 @@
 using System;
 
 namespace Classless.Utilities {
-	/// <summary></summary>
+	/// <summary>A class to identify the current operating system.</summary>
 	sealed public class OperatingSystem {
 		/// <summary>Gets the operating sytem version.</summary>
 		static public Version Version {

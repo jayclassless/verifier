@@ -70,11 +70,6 @@
                     HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.dll"
                 />
                 <Reference
-                    Name = "System.Data"
-                    AssemblyName = "System.Data"
-                    HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.Data.dll"
-                />
-                <Reference
                     Name = "System.Drawing"
                     AssemblyName = "System.Drawing"
                     HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.Drawing.dll"
@@ -85,14 +80,19 @@
                     HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.Windows.Forms.dll"
                 />
                 <Reference
+                    Name = "Classless.Hasher"
+                    AssemblyName = "Classless.Hasher"
+                    HintPath = "Libraries\net-1.1\Classless.Hasher.dll"
+                />
+                <Reference
+                    Name = "System.Data"
+                    AssemblyName = "System.Data"
+                    HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.Data.dll"
+                />
+                <Reference
                     Name = "System.XML"
                     AssemblyName = "System.Xml"
                     HintPath = "C:\WINNT\Microsoft.NET\Framework\v1.1.4322\System.XML.dll"
-                />
-                <Reference
-                    Name = "Classless.Hasher"
-                    AssemblyName = "Classless.Hasher"
-                    HintPath = "Classless.Hasher.dll"
                 />
             </References>
         </Build>
@@ -118,12 +118,12 @@
                     BuildAction = "None"
                 />
                 <File
-                    RelPath = "AppConfig.cs"
+                    RelPath = "AssemblyInfo.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
                 <File
-                    RelPath = "AssemblyInfo.cs"
+                    RelPath = "BSDMD5FileListReader.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
                 />
@@ -203,6 +203,16 @@
                     BuildAction = "EmbeddedResource"
                 />
                 <File
+                    RelPath = "FrmChooseType.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FrmChooseType.resx"
+                    DependentUpon = "FrmChooseType.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
                     RelPath = "FrmLog.cs"
                     SubType = "Form"
                     BuildAction = "Compile"
@@ -220,6 +230,16 @@
                 <File
                     RelPath = "FrmMain.resx"
                     DependentUpon = "FrmMain.cs"
+                    BuildAction = "EmbeddedResource"
+                />
+                <File
+                    RelPath = "FrmOptions.cs"
+                    SubType = "Form"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "FrmOptions.resx"
+                    DependentUpon = "FrmOptions.cs"
                     BuildAction = "EmbeddedResource"
                 />
                 <File
@@ -305,6 +325,31 @@
                 <File
                     RelPath = "Images\verifier.ico"
                     BuildAction = "None"
+                />
+                <File
+                    RelPath = "Misc\FileAssociation.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Profile\Config.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Profile\Events.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Profile\IProfile.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
+                />
+                <File
+                    RelPath = "Profile\Profile.cs"
+                    SubType = "Code"
+                    BuildAction = "Compile"
                 />
             </Include>
         </Files>

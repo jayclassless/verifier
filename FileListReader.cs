@@ -56,10 +56,28 @@ namespace Classless.Verifier {
 			switch (fileExtension) {
 				case "verify":	flr = new VerifyXMLFileListReader(); break;
 				case "vfy":		flr = new VerifyXMLFileListReader(); break;
-				case "sfv":		flr = new SFVFileListReader();		break;
-				case "md5":		flr = new MD5FileListReader();		break;
-				case "md5sum":	flr = new MD5SumFileListReader();	break;
+				case "sfv":		flr = new SFVFileListReader(); break;
+				case "md5":		flr = new MD5FileListReader(); break;
+				case "md5sum":	flr = new MD5FileListReader(); break;
 				default:		throw new FileTypeException();
+			}
+
+			return flr;
+		}
+
+
+		/// <summary>Retrieves the appropriate FileListReader given a specific file type.</summary>
+		/// <param name="type">The FileListType of the FileListReader wanted.</param>
+		/// <returns>The appropriate FileListReader.</returns>
+		static public FileListReader GetReader(FileListType type) {
+			FileListReader flr;
+
+			switch (type) {
+				case FileListType.BSDMD5:	flr = new MD5FileListReader(); break;
+				case FileListType.MD5SUM:	flr = new MD5FileListReader(); break;
+				case FileListType.SFV:		flr = new SFVFileListReader(); break;
+				case FileListType.VERIFYXML: flr = new VerifyXMLFileListReader(); break;
+				default:					throw new FileTypeException();
 			}
 
 			return flr;

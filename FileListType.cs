@@ -41,6 +41,6 @@ namespace Classless.Verifier {
 		MD5SUM,
 
 		/// <summary>MD5 Checksum (FreeBSD)</summary>
-		MD5
+		BSDMD5
 	}
 }

@@ -37,9 +37,9 @@ using System.Reflection;
 [assembly: AssemblyTrademark("(c)2004 Classless.net")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion("0.2.*")]
+[assembly: AssemblyVersion("0.3.*")]
 
 #if STRONGNAME
 [assembly: AssemblyDelaySign(false)]
-[assembly: AssemblyKeyFile(@"..\..\..\Classless.Verifier.snk")]
+[assembly: AssemblyKeyFile(@"D:\Classless\Classless.Verifier.snk")]
 #endif

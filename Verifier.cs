@@ -43,9 +43,19 @@ namespace Classless.Verifier {
 				try {
 					fileList = new FileList(args[0]);
 				} catch (FileTypeException) {
-					// Unknown format.
-					MessageBox.Show(args[0] + " does not contain a supported file verification list format.",
-						"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					// Couldn't figure it out, ask the user what they want to do.
+					FrmChooseType fct = new FrmChooseType();
+					if (fct.ShowDialog(fm) == DialogResult.OK) {
+						try {
+							fileList = new FileList(args[0], fct.FileListType);
+						} catch (FileTypeException) {
+							// Unknown format.
+							MessageBox.Show(args[0] + " is not a supported file verification list format.",
+								"Verifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						} catch (Exception ex) {
+							throw ex;
+						}
+					}
 				} catch (Exception ex) {
 					// Bad error.
 					MessageBox.Show("Could not open file verification list:" +
