@@ -1,0 +1,24 @@
+Verifier
+A File Verification Utility
+(c)2004 Classless.net
+http://www.classless.net/projects/verifier/
+
+-----------------------------------
+
+      Version Change History
+
+-----------------------------------
+
+Legend: + Added Feature or Functionality
+        - Removed Feature or Functionality
+        * Improved/Changed Feature or Functionality
+        X Bug Fix
+        ! Information About Release
+
+
+Version 0.1 (7/1/2004)
+-----------------------
+   [!] Initial public release.
+   [!] Provides SFV, MD5, and VerifyXML (draft) file reading and verification.
+   [!] Has an interactive hash calculator.
+   [!] Utilizes Classless.Hasher v0.5.
